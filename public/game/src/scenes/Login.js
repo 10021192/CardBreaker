@@ -200,7 +200,7 @@ class Login extends Phaser.Scene {
         }
 
         try {
-            const response = await fetch('/api/login', {
+            const response = await fetch('https://cardbreaker.onrender.com/api/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -236,7 +236,7 @@ class Login extends Phaser.Scene {
         }
 
         try {
-            const response = await fetch('/api/register', {
+            const response = await fetch('https://cardbreaker.onrender.com/api/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
