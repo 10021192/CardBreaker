@@ -1,0 +1,63 @@
+{
+    "section1": {
+        "files": [
+            {
+                "url": "assets/button_rectangle_depth_border.png",
+                "type": "image",
+                "key": "button_rectangle_depth_border"
+            },
+            {
+                "url": "assets/button_rectangle_depth_flat.png",
+                "type": "image",
+                "key": "button_rectangle_depth_flat"
+            },
+            {
+                "url": "assets/button_rectangle_depth_gradient.png",
+                "type": "image",
+                "key": "button_rectangle_depth_gradient"
+            },
+            {
+                "url": "assets/dino.png",
+                "key": "dino",
+                "type": "image"
+            },
+            {
+                "url": "assets/slide_vertical_color.png",
+                "type": "image",
+                "key": "slide_vertical_color"
+            },
+            {
+                "url": "assets/slide_vertical_color_section.png",
+                "type": "image",
+                "key": "slide_vertical_color_section"
+            },
+            {
+                "url": "assets/slide_vertical_color_section_wide.png",
+                "type": "image",
+                "key": "slide_vertical_color_section_wide"
+            },
+            {
+                "url": "assets/slide_vertical_color_section_widebig.png",
+                "type": "image",
+                "key": "slide_vertical_color_section_widebig"
+            },
+            {
+                "url": "assets/slide_vertical_color_sectionbig.png",
+                "type": "image",
+                "key": "slide_vertical_color_sectionbig"
+            },
+            {
+                "url": "assets/slide_vertical_colorbig.png",
+                "type": "image",
+                "key": "slide_vertical_colorbig"
+            }
+        ]
+    },
+    "meta": {
+        "app": "Phaser Editor 2D - Asset Pack Editor",
+        "contentType": "phasereditor2d.pack.core.AssetContentType",
+        "url": "https://phasereditor2d.com",
+        "version": 2,
+        "showAllFilesInBlocks": false
+    }
+}

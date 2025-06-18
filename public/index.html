@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CardBreaker - Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        h1, h2 {
+            color: #333;
+        }
+        input {
+            display: block;
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        .error {
+            color: red;
+            margin: 10px 0;
+        }
+        .success {
+            color: green;
+            margin: 10px 0;
+        }
+        .hidden {
+            display: none;
+        }
+        #onlineUsers {
+            list-style: none;
+            padding: 0;
+        }
+        #onlineUsers li {
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #e3f2fd;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .challenge-btn {
+            background-color: #2196F3;
+            font-size: 14px;
+            padding: 5px 15px;
+        }
+        .challenge-btn:hover {
+            background-color: #1976D2;
+        }
+        #activeGames {
+            list-style: none;
+            padding: 0;
+        }
+        #activeGames li {
+            padding: 15px;
+            margin: 10px 0;
+            background-color: #f3e5f5;
+            border-radius: 4px;
+            border: 2px solid #9c27b0;
+        }
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .lives {
+            font-weight: bold;
+            color: #d32f2f;
+        }
+        .challenge-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #fff3e0;
+            border-radius: 4px;
+        }
+        .challenge-actions button {
+            margin-left: 5px;
+        }
+        #receivedChallenges, #sentChallenges {
+            list-style: none;
+            padding: 0;
+            min-height: 30px;
+        }
+    </style>
+</head>
+<body>
+    <h1>CardBreaker - Authentication Test</h1>
+    
+    <!-- User Status Display -->
+    <div id="userStatus" class="hidden"></div>
+    
+    <!-- Login/Register Section -->
+    <div id="authSection" class="container">
+        <h2 id="authTitle">Login</h2>
+        <div id="message"></div>
+        
+        <label for="username">Username:</label>
+        <input type="text" id="username" placeholder="Enter username">
+        
+        <label for="password">Password:</label>
+        <input type="password" id="password" placeholder="Enter password">
+        
+        <!-- Login Mode -->
+        <div id="loginMode">
+            <button onclick="login()" style="width: 100%;">Login</button>
+            <p style="text-align: center; margin-top: 15px;">
+                Don't have an account? 
+                <a href="#" onclick="switchToRegister(); return false;">Register here</a>
+            </p>
+        </div>
+        
+        <!-- Register Mode -->
+        <div id="registerMode" class="hidden">
+            <button onclick="register()" style="width: 100%;">Register</button>
+            <p style="text-align: center; margin-top: 15px;">
+                Already have an account? 
+                <a href="#" onclick="switchToLogin(); return false;">Login here</a>
+            </p>
+        </div>
+    </div>
+    
+    <!-- Logged In Section -->
+    <div id="loggedInSection" class="container hidden">
+        <h2>Welcome, <span id="currentUser"></span>!</h2>
+        <button onclick="logout()">Logout</button>
+        <button onclick="refreshOnlineUsers()">Refresh Online Users</button>
+        
+        <h3>Online Players:</h3>
+        <ul id="onlineUsers"></ul>
+        
+        <h3>Your Challenges:</h3>
+        <div id="challengesSection">
+            <h4>Received Challenges:</h4>
+            <ul id="receivedChallenges"></ul>
+            
+            <h4>Sent Challenges:</h4>
+            <ul id="sentChallenges"></ul>
+        </div>
+        
+        <h3>Active Games:</h3>
+        <ul id="activeGames"></ul>
+    </div>
+
+    <script>
+        // Check if user is already logged in on page load
+        window.onload = function() {
+            checkAuthStatus();
+            
+            // Add Enter key listener to auth form
+            const authInputs = document.querySelectorAll('#username, #password');
+            authInputs.forEach(input => {
+                input.addEventListener('keypress', handleEnterKey);
+            });
+        };
+        
+        // Handle Enter key press in login fields
+        function handleEnterKey(event) {
+            if (event.key === 'Enter') {
+                // Check which mode we're in
+                const isLoginMode = !document.getElementById('loginMode').classList.contains('hidden');
+                if (isLoginMode) {
+                    login();
+                } else {
+                    register();
+                }
+            }
+        }
+        
+        // Switch to register mode
+        function switchToRegister() {
+            document.getElementById('authTitle').textContent = 'Register';
+            document.getElementById('loginMode').classList.add('hidden');
+            document.getElementById('registerMode').classList.remove('hidden');
+            document.getElementById('username').focus();
+        }
+        
+        // Switch to login mode
+        function switchToLogin() {
+            document.getElementById('authTitle').textContent = 'Login';
+            document.getElementById('registerMode').classList.add('hidden');
+            document.getElementById('loginMode').classList.remove('hidden');
+            document.getElementById('username').focus();
+        }
+
+        // Display message to user
+        function showMessage(message, isError = false) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = message;
+            messageDiv.className = isError ? 'error' : 'success';
+            setTimeout(() => {
+                messageDiv.textContent = '';
+                messageDiv.className = '';
+            }, 5000);
+        }
+
+        // Update UI based on login status
+        function updateUI(isLoggedIn, username = '') {
+            const authSection = document.getElementById('authSection');
+            const loggedInSection = document.getElementById('loggedInSection');
+            const userStatus = document.getElementById('userStatus');
+            
+            if (isLoggedIn) {
+                authSection.classList.add('hidden');
+                loggedInSection.classList.remove('hidden');
+                userStatus.classList.remove('hidden');
+                userStatus.textContent = `Logged in as: ${username}`;
+                document.getElementById('currentUser').textContent = username;
+                refreshOnlineUsers();
+                refreshChallenges();
+                refreshActiveGames();
+            } else {
+                authSection.classList.remove('hidden');
+                loggedInSection.classList.add('hidden');
+                userStatus.classList.add('hidden');
+            }
+        }
+
+        // Check if user is authenticated
+        async function checkAuthStatus() {
+            try {
+                const response = await fetch('/api/users/online');
+                if (response.ok) {
+                    // If we can get online users, we're logged in
+                    // This is a workaround since we don't have a dedicated auth check endpoint
+                    updateUI(true, 'User'); // We don't know the username from this endpoint
+                } else {
+                    updateUI(false);
+                }
+            } catch (error) {
+                updateUI(false);
+            }
+        }
+
+        // Register new user
+        async function register() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (!username || !password) {
+                showMessage('Please enter both username and password', true);
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage('Registration successful! You can now login.');
+                    document.getElementById('username').value = '';
+                    document.getElementById('password').value = '';
+                } else {
+                    showMessage(data.error || 'Registration failed', true);
+                }
+            } catch (error) {
+                showMessage('Network error: ' + error.message, true);
+            }
+        }
+        
+        // Play a game
+        function playGame(gameId) {
+            window.location.href = `/game.html?id=${gameId}`;
+        }
+
+        // Login user
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (!username || !password) {
+                showMessage('Please enter both username and password', true);
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage('Login successful!');
+                    updateUI(true, username);
+                    document.getElementById('username').value = '';
+                    document.getElementById('password').value = '';
+                } else {
+                    showMessage(data.error || 'Login failed', true);
+                }
+            } catch (error) {
+                showMessage('Network error: ' + error.message, true);
+            }
+        }
+
+        // Logout user
+        async function logout() {
+            try {
+                const response = await fetch('/api/logout', {
+                    method: 'POST'
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage('Logged out successfully');
+                    updateUI(false);
+                } else {
+                    showMessage('Logout failed', true);
+                }
+            } catch (error) {
+                showMessage('Network error: ' + error.message, true);
+            }
+        }
+
+        // Get and display online users
+        async function refreshOnlineUsers() {
+            try {
+                const response = await fetch('/api/users/online');
+                const users = await response.json();
+                
+                const usersList = document.getElementById('onlineUsers');
+                usersList.innerHTML = '';
+                
+                if (users.length === 0) {
+                    usersList.innerHTML = '<li>No other players online</li>';
+                } else {
+                    users.forEach(user => {
+                        const li = document.createElement('li');
+                        li.innerHTML = `
+                            <span>${user.username}</span>
+                            <button class="challenge-btn" onclick="challengeUser(${user.user_id}, '${user.username}')">
+                                Challenge
+                            </button>
+                        `;
+                        usersList.appendChild(li);
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to fetch online users:', error);
+            }
+        }
+
+        // Challenge a user
+        async function challengeUser(userId, username) {
+            if (!confirm(`Send challenge to ${username}?`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/challenge/send', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ challengedId: userId })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage(`Challenge sent to ${username}!`);
+                    refreshChallenges();
+                } else {
+                    showMessage(data.error || 'Failed to send challenge', true);
+                }
+            } catch (error) {
+                showMessage('Network error: ' + error.message, true);
+            }
+        }
+        
+        // Get and display challenges
+        async function refreshChallenges() {
+            try {
+                const response = await fetch('/api/challenge/pending');
+                const data = await response.json();
+                
+                // Display received challenges
+                const receivedList = document.getElementById('receivedChallenges');
+                receivedList.innerHTML = '';
+                
+                if (data.received.length === 0) {
+                    receivedList.innerHTML = '<li>No pending challenges</li>';
+                } else {
+                    data.received.forEach(challenge => {
+                        const li = document.createElement('li');
+                        li.className = 'challenge-item';
+                        li.innerHTML = `
+                            <span>From: ${challenge.challenger_name}</span>
+                            <div class="challenge-actions">
+                                <button onclick="acceptChallenge(${challenge.challenge_id})" style="background-color: #4CAF50;">Accept</button>
+                                <button onclick="declineChallenge(${challenge.challenge_id})" style="background-color: #f44336;">Decline</button>
+                            </div>
+                        `;
+                        receivedList.appendChild(li);
+                    });
+                }
+                
+                // Display sent challenges
+                const sentList = document.getElementById('sentChallenges');
+                sentList.innerHTML = '';
+                
+                if (data.sent.length === 0) {
+                    sentList.innerHTML = '<li>No sent challenges</li>';
+                } else {
+                    data.sent.forEach(challenge => {
+                        const li = document.createElement('li');
+                        li.className = 'challenge-item';
+                        li.innerHTML = `
+                            <span>To: ${challenge.challenged_name}</span>
+                            <div class="challenge-actions">
+                                <button onclick="cancelChallenge(${challenge.challenge_id})" style="background-color: #ff9800;">Cancel</button>
+                            </div>
+                        `;
+                        sentList.appendChild(li);
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to fetch challenges:', error);
+            }
+        }
+        
+        // Accept a challenge
+        async function acceptChallenge(challengeId) {
+            try {
+                const response = await fetch('/api/challenge/accept', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ challengeId })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage('Challenge accepted! Game created.');
+                    refreshChallenges();
+                    refreshActiveGames();
+                } else {
+                    showMessage(data.error || 'Failed to accept challenge', true);
+                }
+            } catch (error) {
+                showMessage('Network error: ' + error.message, true);
+            }
+        }
+        
+        // Decline a challenge
+        async function declineChallenge(challengeId) {
+            try {
+                const response = await fetch('/api/challenge/decline', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ challengeId })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage('Challenge declined');
+                    refreshChallenges();
+                } else {
+                    showMessage(data.error || 'Failed to decline challenge', true);
+                }
+            } catch (error) {
+                showMessage('Network error: ' + error.message, true);
+            }
+        }
+        
+        // Cancel a sent challenge
+        async function cancelChallenge(challengeId) {
+            try {
+                const response = await fetch('/api/challenge/cancel', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ challengeId })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage('Challenge cancelled');
+                    refreshChallenges();
+                } else {
+                    showMessage(data.error || 'Failed to cancel challenge', true);
+                }
+            } catch (error) {
+                showMessage('Network error: ' + error.message, true);
+            }
+        }
+        
+        // Get and display active games
+        async function refreshActiveGames() {
+            try {
+                const response = await fetch('/api/games/active');
+                const games = await response.json();
+                
+                const gamesList = document.getElementById('activeGames');
+                gamesList.innerHTML = '';
+                
+                if (games.length === 0) {
+                    gamesList.innerHTML = '<li>No active games</li>';
+                } else {
+                    games.forEach(game => {
+                        const li = document.createElement('li');
+                        const isPlayer1 = game.your_role === 'player1';
+                        const yourLives = isPlayer1 ? game.player1_lives : game.player2_lives;
+                        const opponentLives = isPlayer1 ? game.player2_lives : game.player1_lives;
+                        const opponentName = isPlayer1 ? game.player2_name : game.player1_name;
+                        
+                        li.innerHTML = `
+                            <div class="game-info">
+                                <div>
+                                    <strong>Game #${game.game_id}</strong> vs ${opponentName}<br>
+                                    Round ${game.current_round}
+                                </div>
+                                <div>
+                                    <span class="lives">Your Lives: ${yourLives}</span> | 
+                                    <span class="lives">Opponent: ${opponentLives}</span>
+                                </div>
+                            </div>
+                            <button onclick="playGame(${game.game_id})" style="margin-top: 10px;">Play Game</button>
+                            <button onclick="forfeitGame(${game.game_id})" style="margin-top: 10px; background-color: #f44336;">Forfeit (Testing)</button>
+                        `;
+                        gamesList.appendChild(li);
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to fetch active games:', error);
+            }
+        }
+        
+        // Auto-refresh challenges and games every 5 seconds when logged in
+        setInterval(() => {
+            const loggedInSection = document.getElementById('loggedInSection');
+            if (!loggedInSection.classList.contains('hidden')) {
+                refreshOnlineUsers();  // Add this line!
+                refreshChallenges();
+                refreshActiveGames();
+            }
+        }, 5000);
+        
+        // Forfeit a game (for testing)
+        async function forfeitGame(gameId) {
+            if (!confirm('Forfeit this game? You will lose!')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/game/forfeit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ gameId })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showMessage('Game forfeited. You lost!');
+                    refreshActiveGames();
+                    refreshOnlineUsers(); // Refresh to enable challenges again
+                } else {
+                    showMessage(data.error || 'Failed to forfeit game', true);
+                }
+            } catch (error) {
+                showMessage('Network error: ' + error.message, true);
+            }
+        }
+    </script>
+</body>
+</html>

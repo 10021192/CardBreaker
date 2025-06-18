@@ -1,0 +1,159 @@
+{
+    "id": "de33374a-7ab9-4389-9bd0-25890faf09cf",
+    "sceneType": "SCENE",
+    "settings": {
+        "preloadPackFiles": [],
+        "createMethodName": "editorCreate",
+        "sceneKey": "Lobby",
+        "borderWidth": 1280,
+        "borderHeight": 720
+    },
+    "displayList": [
+        {
+            "type": "Container",
+            "id": "fb7dd0bf-8513-438e-aabc-cba3a76b2b1a",
+            "label": "OnlinePanel",
+            "scope": "CLASS",
+            "list": [
+                {
+                    "type": "Rectangle",
+                    "id": "bf95e884-beb2-496a-a9c2-9924f510207a",
+                    "label": "OnlineBg",
+                    "scaleX": 1.6320594404358049,
+                    "scaleY": 3.0956180063085617,
+                    "originX": 0,
+                    "originY": 0,
+                    "isFilled": true,
+                    "fillColor": "0x2a2a2a",
+                    "fillAlpha": 0.85,
+                    "width": 128,
+                    "height": 128
+                },
+                {
+                    "type": "Image",
+                    "id": "a6155131-4dec-4e42-bf21-fdfa66bccd36",
+                    "label": "button_rectangle_depth_border",
+                    "texture": {
+                        "key": "button_rectangle_depth_border"
+                    },
+                    "scaleX": 1.0868518355173178,
+                    "scaleY": 1.0945734102895304,
+                    "originX": 0,
+                    "originY": 0
+                },
+                {
+                    "type": "Text",
+                    "id": "16496396-d2af-4a23-a689-9adfcc902c63",
+                    "label": "OnlinePlayers",
+                    "x": 104,
+                    "y": 19,
+                    "originX": 0.5,
+                    "text": "Online",
+                    "fontSize": "28px",
+                    "color": "#000000ff"
+                }
+            ]
+        },
+        {
+            "type": "Container",
+            "id": "6edceced-5862-4537-8e75-0b00bb5527e2",
+            "label": "LoginButton",
+            "scope": "CLASS",
+            "hitArea.shape": "RECTANGLE",
+            "hitArea.x": -192,
+            "hitArea.y": -64,
+            "hitArea.width": 384,
+            "hitArea.height": 128,
+            "x": 640,
+            "y": 679,
+            "scaleX": 0.7,
+            "scaleY": 0.7,
+            "list": [
+                {
+                    "type": "Image",
+                    "id": "506adeed-1118-463c-b615-6b2af0a2f96a",
+                    "label": "LogoutImage",
+                    "scope": "CLASS",
+                    "texture": {
+                        "key": "button_rectangle_depth_flat"
+                    },
+                    "y": 3
+                },
+                {
+                    "type": "Text",
+                    "id": "2e422aa2-a9a5-4632-a537-ec1b37217a68",
+                    "label": "LogoutText",
+                    "originX": 0.5,
+                    "originY": 0.5,
+                    "text": "Logout",
+                    "align": "center",
+                    "fontSize": "48px"
+                }
+            ]
+        },
+        {
+            "type": "Container",
+            "id": "75cbb31d-0c17-4f3a-89d4-90b185753424",
+            "label": "ChallengePanel",
+            "scope": "CLASS",
+            "x": 1071,
+            "list": [
+                {
+                    "type": "Rectangle",
+                    "id": "26df8d2d-27e4-4340-9c66-c5d0dd0003bd",
+                    "label": "ReceivedBg",
+                    "scaleX": 1.6320594404358049,
+                    "scaleY": 3.0956180063085617,
+                    "originX": 0,
+                    "originY": 0,
+                    "isFilled": true,
+                    "fillColor": "0x2a2a2a",
+                    "fillAlpha": 0.85,
+                    "width": 128,
+                    "height": 128
+                },
+                {
+                    "type": "Text",
+                    "id": "b02d6900-c436-40fe-9cdf-be2ef52d6d9c",
+                    "label": "ReceivedLabel",
+                    "x": 103,
+                    "y": 80,
+                    "originX": 0.5,
+                    "text": "Received",
+                    "fontSize": "28px",
+                    "color": "#ffffffff"
+                },
+                {
+                    "type": "Image",
+                    "id": "eb8af48e-fca8-4c3e-91ba-58a3601c96e0",
+                    "label": "button_rectangle_depth_border_1",
+                    "texture": {
+                        "key": "button_rectangle_depth_border"
+                    },
+                    "scaleX": 1.0868518355173178,
+                    "scaleY": 1.0945734102895304,
+                    "originX": 0,
+                    "originY": 0
+                },
+                {
+                    "type": "Text",
+                    "id": "265ee503-d39d-40b6-9ccd-b8d3dced7fef",
+                    "label": "Challenges",
+                    "x": 104,
+                    "y": 19,
+                    "originX": 0.5,
+                    "text": "Challenges",
+                    "fontSize": "28px",
+                    "color": "#000000ff"
+                }
+            ]
+        }
+    ],
+    "plainObjects": [],
+    "meta": {
+        "app": "Phaser Editor 2D - Scene Editor",
+        "url": "https://phasereditor2d.com",
+        "contentType": "phasereditor2d.core.scene.SceneContentType",
+        "version": 5
+    }
+}

@@ -1,0 +1,57 @@
+{
+    "id": "79743542-22cd-4285-ba58-7a721943b833",
+    "sceneType": "SCENE",
+    "settings": {
+        "preloadPackFiles": [],
+        "createMethodName": "editorCreate",
+        "sceneKey": "Login",
+        "borderWidth": 1280,
+        "borderHeight": 720
+    },
+    "displayList": [
+        {
+            "type": "Container",
+            "id": "212a155a-cd26-4262-91dc-0c316b05d078",
+            "label": "LoginButton",
+            "scope": "CLASS",
+            "hitArea.shape": "RECTANGLE",
+            "hitArea.x": -192,
+            "hitArea.y": -64,
+            "hitArea.width": 384,
+            "hitArea.height": 128,
+            "x": 640,
+            "y": 551,
+            "scaleX": 0.7,
+            "scaleY": 0.7,
+            "list": [
+                {
+                    "type": "Image",
+                    "id": "e2b29975-f683-46ad-9678-06dfc6c4b174",
+                    "label": "LoginImage",
+                    "scope": "CLASS",
+                    "texture": {
+                        "key": "button_rectangle_depth_flat"
+                    },
+                    "y": 3
+                },
+                {
+                    "type": "Text",
+                    "id": "195033b5-9e06-40b0-945c-6d834d5be6fa",
+                    "label": "LoginText",
+                    "originX": 0.5,
+                    "originY": 0.5,
+                    "text": "Login",
+                    "align": "center",
+                    "fontSize": "48px"
+                }
+            ]
+        }
+    ],
+    "plainObjects": [],
+    "meta": {
+        "app": "Phaser Editor 2D - Scene Editor",
+        "url": "https://phasereditor2d.com",
+        "contentType": "phasereditor2d.core.scene.SceneContentType",
+        "version": 5
+    }
+}

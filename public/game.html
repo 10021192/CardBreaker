@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Card Game - Play</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1a1a2e;
+            color: #eee;
+        }
+        .game-container {
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .panel {
+            background-color: #16213e;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .game-board {
+            text-align: center;
+        }
+        .lives {
+            font-size: 24px;
+            margin: 10px 0;
+        }
+        .lives span {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        .cards {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .card {
+            width: 100px;
+            height: 140px;
+            background-color: #0f3460;
+            border: 3px solid #e94560;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 5px 15px rgba(233, 69, 96, 0.5);
+        }
+        .card.selected {
+            background-color: #e94560;
+            transform: translateY(-10px);
+        }
+        .card-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+        .token {
+            background-color: #16213e;
+            border: 2px solid #f39c12;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .token.available {
+            background-color: #27ae60;
+            cursor: pointer;
+        }
+        .token.cooldown {
+            background-color: #7f8c8d;
+            cursor: not-allowed;
+        }
+        .token-options {
+            display: none;
+            margin-top: 10px;
+        }
+        .token-options.show {
+            display: block;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button:disabled {
+            background-color: #7f8c8d;
+            cursor: not-allowed;
+        }
+        .play-button {
+            background-color: #27ae60;
+            font-size: 20px;
+            padding: 15px 30px;
+        }
+        .play-button:hover {
+            background-color: #229954;
+        }
+        .waiting {
+            text-align: center;
+            font-size: 18px;
+            color: #f39c12;
+        }
+        #gameStatus {
+            text-align: center;
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+        .history {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .history-item {
+            background-color: #0f3460;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .winner { color: #27ae60; }
+        .loser { color: #e74c3c; }
+        .tie { color: #f39c12; }
+    </style>
+</head>
+<body>
+    <h1>Card Game - Battle Arena</h1>
+    <button onclick="window.location.href='/'">Back to Lobby</button>
+    
+    <div id="gameStatus"></div>
+    
+    <div class="game-container">
+        <!-- Left Panel - Your Info -->
+        <div class="panel">
+            <h2>You: <span id="yourName"></span></h2>
+            <div class="lives">Lives: <span id="yourLives">3</span></div>
+            
+            <div class="token" id="yourToken">
+                <h3>Token</h3>
+                <div id="tokenStatus">Loading...</div>
+                <div class="token-options" id="tokenOptions" onclick="event.stopPropagation()">
+                    <label>
+                        <input type="radio" name="tokenEffect" value="switch"> Switch Card
+                    </label>
+                    <label>
+                        <input type="radio" name="tokenEffect" value="life"> Prevent Life Loss
+                    </label>
+                    <div id="switchCardOptions" style="display:none; margin-top:10px;">
+                        <p>Switch to:</p>
+                        <label><input type="radio" name="switchTo" value="attack"> Attack</label>
+                        <label><input type="radio" name="switchTo" value="shield"> Shield</label>
+                        <label><input type="radio" name="switchTo" value="counter"> Counter</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Center - Game Board -->
+        <div class="panel game-board">
+            <h2>Round <span id="currentRound">1</span></h2>
+            
+            <div id="cardSelection">
+                <h3>Choose Your Card:</h3>
+                <div class="cards">
+                    <div class="card" onclick="selectCard('attack')">
+                        <div class="card-icon">⚔️</div>
+                        <div>Attack</div>
+                    </div>
+                    <div class="card" onclick="selectCard('shield')">
+                        <div class="card-icon">🛡️</div>
+                        <div>Shield</div>
+                    </div>
+                    <div class="card" onclick="selectCard('counter')">
+                        <div class="card-icon">↩️</div>
+                        <div>Counter</div>
+                    </div>
+                </div>
+                
+                <button class="play-button" id="playButton" onclick="playCard()" disabled>
+                    Select a Card
+                </button>
+            </div>
+            
+            <div id="waitingMessage" class="waiting" style="display:none;">
+                Waiting for opponent...
+            </div>
+        </div>
+        
+        <!-- Right Panel - Opponent Info -->
+        <div class="panel">
+            <h2>Opponent: <span id="opponentName"></span></h2>
+            <div class="lives">Lives: <span id="opponentLives">3</span></div>
+            
+            <h3>Round History</h3>
+            <div class="history" id="history"></div>
+        </div>
+    </div>
+
+    <script>
+        let gameId = null;
+        let selectedCard = null;
+        let useToken = false;
+        let tokenEffect = null;
+        let switchToCard = null;
+        let gameState = null;
+        let pollInterval = null;
+
+        // Get game ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        gameId = urlParams.get('id');
+        
+        if (!gameId) {
+            alert('No game ID provided!');
+            window.location.href = '/';
+        }
+
+        // Initialize game
+        window.onload = function() {
+            loadGameState();
+            pollInterval = setInterval(pollGameState, 2000);
+        };
+
+        // Clean up on page unload
+        window.onbeforeunload = function() {
+            if (pollInterval) clearInterval(pollInterval);
+        };
+
+        // Load game state
+        async function loadGameState() {
+            try {
+                const response = await fetch(`/api/game/${gameId}`);
+                if (!response.ok) {
+                    throw new Error('Failed to load game');
+                }
+                
+                const data = await response.json();
+                updateGameDisplay(data);
+            } catch (error) {
+                console.error('Error loading game:', error);
+                alert('Failed to load game');
+            }
+        }
+
+        // Poll for game updates
+        async function pollGameState() {
+            // Always poll to check for round completion or game state changes
+            loadGameState();
+        }
+
+        // Update game display
+        function updateGameDisplay(data) {
+            const previousRound = gameState ? gameState.game.currentRound : 0;
+            gameState = data;
+            
+            // Update names and lives
+            document.getElementById('yourName').textContent = 
+                data.game.yourRole === 'player1' ? data.game.player1Name : data.game.player2Name;
+            document.getElementById('opponentName').textContent = 
+                data.game.yourRole === 'player1' ? data.game.player2Name : data.game.player1Name;
+            
+            document.getElementById('yourLives').textContent = data.game.yourLives;
+            document.getElementById('opponentLives').textContent = data.game.opponentLives;
+            document.getElementById('currentRound').textContent = data.game.currentRound;
+            
+            // Update token status
+            updateTokenDisplay(data.token);
+            
+            // Update game status
+            if (data.game.status === 'completed') {
+                endGame(data.game);
+            } else if (data.currentRound.hasPlayed) {
+                // Player has already played this round
+                if (!document.getElementById('waitingMessage').style.display || 
+                    document.getElementById('waitingMessage').style.display === 'none') {
+                    // Only update UI if not already waiting
+                    document.getElementById('cardSelection').style.display = 'none';
+                    document.getElementById('waitingMessage').style.display = 'block';
+                }
+                
+                if (data.currentRound.bothPlayed) {
+                    // Both played, wait a moment then refresh for next round
+                    setTimeout(() => {
+                        loadGameState();
+                    }, 1000);
+                }
+            } else if (data.game.currentRound > previousRound && previousRound > 0) {
+                // New round started, ensure UI is reset
+                document.getElementById('cardSelection').style.display = 'block';
+                document.getElementById('waitingMessage').style.display = 'none';
+                resetCardSelection();
+            } else if (!data.currentRound.hasPlayed) {
+                // Haven't played yet this round
+                if (document.getElementById('cardSelection').style.display === 'none') {
+                    document.getElementById('cardSelection').style.display = 'block';
+                    document.getElementById('waitingMessage').style.display = 'none';
+                }
+            }
+            
+            // Load history
+            loadHistory();
+        }
+
+        // Update token display
+        function updateTokenDisplay(token) {
+            const tokenDiv = document.getElementById('yourToken');
+            const statusDiv = document.getElementById('tokenStatus');
+            
+            // If roundsUntilAvailable is 0, it should be available
+            const isActuallyAvailable = token.available || token.roundsUntilAvailable === 0;
+            
+            if (isActuallyAvailable) {
+                tokenDiv.className = 'token available';
+                statusDiv.innerHTML = '<strong>Available!</strong> Click to use';
+                // Remove old onclick and add new one
+                tokenDiv.onclick = function(e) {
+                    // Only toggle if clicking on the token div itself, not the options
+                    if (e.target === tokenDiv || e.target === statusDiv || e.target.tagName === 'H3') {
+                        toggleToken();
+                    }
+                };
+            } else {
+                tokenDiv.className = 'token cooldown';
+                if (token.roundsUntilAvailable === 1) {
+                    statusDiv.innerHTML = `Cooldown: 1 round`;
+                } else {
+                    statusDiv.innerHTML = `Cooldown: ${token.roundsUntilAvailable} rounds`;
+                }
+                tokenDiv.onclick = null;
+            }
+        }
+
+        // Toggle token usage
+        function toggleToken() {
+            if (!gameState.token.available) return;
+            
+            const options = document.getElementById('tokenOptions');
+            
+            if (!useToken) {
+                useToken = true;
+                options.classList.add('show');
+                // Don't pre-select any option - let user choose
+            } else {
+                useToken = false;
+                tokenEffect = null;
+                switchToCard = null;
+                options.classList.remove('show');
+                document.getElementById('switchCardOptions').style.display = 'none';
+                document.querySelectorAll('input[name="tokenEffect"]').forEach(r => r.checked = false);
+                document.querySelectorAll('input[name="switchTo"]').forEach(r => r.checked = false);
+            }
+            
+            updatePlayButton();
+        }
+
+        // Handle token effect selection
+        document.querySelectorAll('input[name="tokenEffect"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                tokenEffect = e.target.value;
+                
+                if (tokenEffect === 'switch') {
+                    document.getElementById('switchCardOptions').style.display = 'block';
+                } else {
+                    document.getElementById('switchCardOptions').style.display = 'none';
+                    switchToCard = null;
+                }
+                
+                updatePlayButton();
+            });
+        });
+
+        document.querySelectorAll('input[name="switchTo"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                switchToCard = e.target.value;
+                updatePlayButton();
+            });
+        });
+
+        // Select a card
+        function selectCard(card) {
+            selectedCard = card;
+            
+            // Update visual selection
+            document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
+            event.target.closest('.card').classList.add('selected');
+            
+            updatePlayButton();
+        }
+
+        // Update play button
+        function updatePlayButton() {
+            const button = document.getElementById('playButton');
+            
+            if (!selectedCard) {
+                button.disabled = true;
+                button.textContent = 'Select a Card';
+            } else if (useToken && !tokenEffect) {
+                button.disabled = true;
+                button.textContent = 'Select Token Effect';
+            } else if (useToken && tokenEffect === 'switch' && !switchToCard) {
+                button.disabled = true;
+                button.textContent = 'Select Card to Switch To';
+            } else {
+                button.disabled = false;
+                button.textContent = useToken ? `Play ${selectedCard} with Token` : `Play ${selectedCard}`;
+            }
+        }
+
+        // Play selected card
+        async function playCard() {
+            if (!selectedCard) return;
+            
+            const payload = {
+                card: selectedCard,
+                useToken: useToken,
+                tokenEffect: useToken ? tokenEffect : null,
+                switchToCard: tokenEffect === 'switch' ? switchToCard : null
+            };
+            
+            console.log('Playing card with payload:', payload);
+            
+            try {
+                const response = await fetch(`/api/game/${gameId}/play-card`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to play card');
+                }
+                
+                // Always reload state after playing to get updated info
+                setTimeout(() => {
+                    loadGameState();
+                }, 500);
+            } catch (error) {
+                alert('Error playing card: ' + error.message);
+                console.error('Play card error:', error);
+            }
+        }
+
+        // Load round result
+        async function loadRoundResult() {
+            // Prevent loading multiple times
+            if (document.getElementById('roundResult').style.display === 'block') {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/game/${gameId}/history`);
+                const history = await response.json();
+                
+                if (history.length > 0) {
+                    const lastRound = history[history.length - 1];
+                    
+                    // Determine who is who based on game state
+                    const isPlayer1 = gameState.game.yourRole === 'player1';
+                    const yourPlayerId = isPlayer1 ? history[0].player1_id : history[0].player2_id;
+                    const opponentPlayerId = isPlayer1 ? history[0].player2_id : history[0].player1_id;
+                    
+                    displayRoundResult({
+                        player1Card: lastRound.player1_card,
+                        player2Card: lastRound.player2_card,
+                        yourCard: isPlayer1 ? lastRound.player1_card : lastRound.player2_card,
+                        opponentCard: isPlayer1 ? lastRound.player2_card : lastRound.player1_card,
+                        roundWinner: lastRound.round_winner_id,
+                        yourPlayerId: yourPlayerId,
+                        player1Lives: gameState.game.yourRole === 'player1' ? 
+                            gameState.game.yourLives : gameState.game.opponentLives,
+                        player2Lives: gameState.game.yourRole === 'player2' ? 
+                            gameState.game.yourLives : gameState.game.opponentLives
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading round result:', error);
+            }
+        }
+
+        // Display round result
+        function displayRoundResult(result) {
+            const resultDiv = document.getElementById('roundResult');
+            
+            let resultText = '';
+            
+            if (!result.roundWinner) {
+                resultText = `<h2 class="tie">It's a tie!</h2>`;
+            } else {
+                const youWon = result.roundWinner === result.yourPlayerId;
+                
+                if (youWon) {
+                    resultText = `<h2 class="winner">You won this round!</h2>`;
+                } else {
+                    resultText = `<h2 class="loser">You lost this round!</h2>`;
+                }
+            }
+            
+            resultDiv.innerHTML = resultText;
+            resultDiv.style.display = 'block';
+            document.getElementById('waitingMessage').style.display = 'none';
+            
+            // Auto-hide after 3 seconds and move to next round
+            setTimeout(() => {
+                resultDiv.style.display = 'none';
+                if (gameState.game.status !== 'completed') {
+                    // Reload to get next round state
+                    loadGameState();
+                }
+            }, 3000);
+        }
+
+        // Continue to next round
+        function nextRound() {
+            // This function is no longer needed since we auto-advance
+        }
+
+        // Reset card selection
+        function resetCardSelection() {
+            selectedCard = null;
+            useToken = false;
+            tokenEffect = null;
+            switchToCard = null;
+            
+            document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
+            document.getElementById('tokenOptions').classList.remove('show');
+            document.getElementById('switchCardOptions').style.display = 'none';
+            document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
+            
+            updatePlayButton();
+        }
+
+        // Load game history
+        async function loadHistory() {
+            try {
+                const response = await fetch(`/api/game/${gameId}/history`);
+                const history = await response.json();
+                
+                const historyDiv = document.getElementById('history');
+                historyDiv.innerHTML = '';
+                
+                history.forEach((round, index) => {
+                    const div = document.createElement('div');
+                    div.className = 'history-item';
+                    
+                    let text = `Round ${round.round_number}: `;
+                    text += `${getCardEmoji(round.player1_card)} vs ${getCardEmoji(round.player2_card)} - `;
+                    
+                    if (round.winner_name) {
+                        text += `${round.winner_name} wins`;
+                    } else {
+                        text += 'Tie';
+                    }
+                    
+                    div.textContent = text;
+                    historyDiv.appendChild(div);
+                });
+            } catch (error) {
+                console.error('Error loading history:', error);
+            }
+        }
+
+        // Get card emoji
+        function getCardEmoji(card) {
+            switch(card) {
+                case 'attack': return '⚔️';
+                case 'shield': return '🛡️';
+                case 'counter': return '↩️';
+                default: return '❓';
+            }
+        }
+
+        // End game
+        function endGame(game) {
+            clearInterval(pollInterval);
+            
+            const won = (game.yourRole === 'player1' && game.yourLives > 0) ||
+                       (game.yourRole === 'player2' && game.yourLives > 0);
+            
+            document.getElementById('gameStatus').innerHTML = 
+                won ? '<h2 class="winner">🎉 You Won! 🎉</h2>' : '<h2 class="loser">💀 You Lost! 💀</h2>';
+            
+            document.getElementById('cardSelection').style.display = 'none';
+            document.getElementById('waitingMessage').style.display = 'none';
+            
+            setTimeout(() => {
+                if (confirm('Game Over! Return to lobby?')) {
+                    window.location.href = '/';
+                }
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
