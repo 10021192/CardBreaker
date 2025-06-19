@@ -472,6 +472,9 @@ class Lobby extends Phaser.Scene {
 
 			const data = await res.json();
 			console.log('[declineChallenge] status:', res.status, 'payload:', data);
+
+			/* ───── force a fresh list right away ───── */
+    		if (res.ok) this.loadChallenges();
 			
 		} catch (e) { console.error('Error declining:', e); }
 	}
@@ -487,6 +490,9 @@ class Lobby extends Phaser.Scene {
 
 			const data = await res.json();
 			console.log('[cancelChallenge] status:', res.status, 'payload:', data);
+
+			/* ───── force a fresh list right away ───── */
+    		if (res.ok) this.loadChallenges();
 
 		} catch (e) { console.error('Error cancelling:', e); }
 	}
@@ -519,6 +525,9 @@ class Lobby extends Phaser.Scene {
 		if (this.pollInterval) {
 			this.pollInterval.remove();
 		}
+
+		this.receivedChallengesContainer?.removeAll(true);
+		this.sentChallengesContainer?.removeAll(true);
 
 		// Transition to new scene
 		this.scene.start(sceneName);
