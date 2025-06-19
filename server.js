@@ -22,7 +22,7 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static('public', { index: false }));
+app.use(express.static('public'));
 
 // Session configuration
 app.use(session({
@@ -39,6 +39,11 @@ app.use(session({
 // Basic routes
 app.get('/', (req, res) => {
     res.redirect('/game/');
+});
+
+// Explicitly serve game index.html
+app.get('/game/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/game/index.html'));
 });
 
 // Test routes
