@@ -116,7 +116,6 @@ class Lobby extends Phaser.Scene {
 
 		// Get current user - fallback to username from login if needed
 		this.currentUser = this.game.registry.get('currentUser') || { username: 'Unknown' };
-		console.log('Current user:', this.currentUser); // Debug log
 		
 		// If currentUser doesn't have username property, it might be stored differently
 		if (!this.currentUser.username && typeof this.currentUser === 'string') {
@@ -227,8 +226,6 @@ class Lobby extends Phaser.Scene {
 			});
 			const data = await response.json();
 
-			console.log('Online users response:', data);
-
 			// accept either plain array *or* an { users: [...] } wrapper
 			const list = Array.isArray(data) ? data : (data.users || []);
 			this.updateOnlineUsersList(list);
@@ -273,8 +270,6 @@ class Lobby extends Phaser.Scene {
 
 		// Filter out current user and display others
 		const otherUsers = users.filter(user => user.username !== this.currentUser.username);
-
-		console.log('Filtered users to display:', otherUsers);
 
 		if (otherUsers.length === 0) {
 			const noUsersText = this.add.text(0, 50, '• No users online', {
@@ -430,6 +425,7 @@ class Lobby extends Phaser.Scene {
 			const data = await response.json();
 
 			if (response.ok && data.game_id) {
+				console.log(`✔ Challenge ${challengeId} accepted - created game ${data.game_id}`);
 				// Store game ID and transition to game scene
 				this.game.registry.set('currentGameId', data.game_id);
 				this.cleanupAndTransition('Game');
