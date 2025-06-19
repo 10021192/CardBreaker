@@ -528,6 +528,7 @@ class Lobby extends Phaser.Scene {
 
 		this.receivedChallengesContainer?.removeAll(true);
 		this.sentChallengesContainer?.removeAll(true);
+		this.onlineUsersContainer?.removeAll(true);
 
 		// Transition to new scene
 		this.scene.start(sceneName);
