@@ -106,9 +106,6 @@ class Level extends Phaser.Scene {
             
             this.cardButtons.push({ img, highlight: hl, type: card });
             
-            // hover / select
-			img.on('pointerover', () => this.gameState === 'selecting' && img.setScale(1.1));
-			img.on('pointerout',  () => img.setScale(1));
 			img.on('pointerdown', () => {
 				if (this.gameState !== 'selecting') return;
 				if (this.selectedToken === 'switch' && this.selectedCard)
