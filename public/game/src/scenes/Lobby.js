@@ -423,13 +423,16 @@ class Lobby extends Phaser.Scene {
 			});
 
 			const data = await response.json();
+			console.log('[acceptChallenge] status:', response.status, 'payload:', data);
 
 			if (response.ok && data.game_id) {
-				console.log(`✔ Challenge ${challengeId} accepted - created game ${data.game_id}`);
 				// Store game ID and transition to game scene
 				this.game.registry.set('currentGameId', data.game_id);
-				this.cleanupAndTransition('Game');
+				//this.cleanupAndTransition('Game');
 			}
+			else if (!response.ok) {
+          		console.error('Accept error:', data.error);
+      		}
 		} catch (error) {
 			console.error('Error accepting challenge:', error);
 		}
