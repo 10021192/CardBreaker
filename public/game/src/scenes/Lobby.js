@@ -335,6 +335,19 @@ class Lobby extends Phaser.Scene {
 			acceptBtn.on('pointerover', () => acceptBtn.setFillStyle(0x66ff66));
 			acceptBtn.on('pointerout', () => acceptBtn.setFillStyle(0x44ff44));
 			acceptBtn.on('pointerdown', () => this.acceptChallenge(challenge.challenge_id));
+
+			// Decline button
+			const declineBtn  = this.add.rectangle(190, y + 10, 60, 25, 0xff4444)
+				.setInteractive({ useHandCursor: true });
+			const declineTxt  = this.add.text(190, y + 10, 'Decline', {
+				fontSize: '14px', color: '#ffffff'
+			}).setOrigin(0.5);
+
+			this.receivedChallengesContainer.add([declineBtn, declineTxt]);
+
+			declineBtn.on('pointerover', () => declineBtn.setFillStyle(0xff6666));
+			declineBtn.on('pointerout',  () => declineBtn.setFillStyle(0xff4444));
+			declineBtn.on('pointerdown', () => this.declineChallenge(challenge.challenge_id));
 		});
 
 		// Update sent challenges
@@ -349,12 +362,18 @@ class Lobby extends Phaser.Scene {
 			});
 			this.sentChallengesContainer.add(challengedText);
 
-			const statusText = this.add.text(120, y, 'Pending...', {
-				fontSize: '14px',
-				color: '#666666',
-				fontStyle: 'italic'
-			});
-			this.sentChallengesContainer.add(statusText);
+			// Cancel button
+			const cancelBtn = this.add.rectangle(120, y + 10, 60, 25, 0xaa8800)
+				.setInteractive({ useHandCursor: true });
+			const cancelTxt = this.add.text(120, y + 10, 'Cancel', {
+				fontSize: '14px', color: '#ffffff'
+			}).setOrigin(0.5);
+			
+			this.sentChallengesContainer.add([cancelBtn, cancelTxt]);
+
+			cancelBtn.on('pointerover', () => cancelBtn.setFillStyle(0xccaa00));
+			cancelBtn.on('pointerout',  () => cancelBtn.setFillStyle(0xaa8800));
+			cancelBtn.on('pointerdown', () => this.cancelChallenge(challenge.challenge_id));
 		});
 	}
 
