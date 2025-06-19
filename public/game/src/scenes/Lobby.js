@@ -1,4 +1,3 @@
-
 // You can write more code here
 
 /* START OF COMPILED CODE */
@@ -66,22 +65,15 @@ class Lobby extends Phaser.Scene {
 		// ChallengePanel
 		const challengePanel = this.add.container(1071, 0);
 
-		// ReceivedBg
-		const receivedBg = this.add.rectangle(0, 0, 128, 128);
-		receivedBg.scaleX = 1.6320594404358049;
-		receivedBg.scaleY = 3.0956180063085617;
-		receivedBg.setOrigin(0, 0);
-		receivedBg.isFilled = true;
-		receivedBg.fillColor = 2763306;
-		receivedBg.fillAlpha = 0.85;
-		challengePanel.add(receivedBg);
-
-		// ReceivedLabel
-		const receivedLabel = this.add.text(103, 80, "", {});
-		receivedLabel.setOrigin(0.5, 0);
-		receivedLabel.text = "Received";
-		receivedLabel.setStyle({ "color": "#ffffffff", "fontSize": "28px" });
-		challengePanel.add(receivedLabel);
+		// ChallengesBg
+		const challengesBg = this.add.rectangle(0, 0, 128, 128);
+		challengesBg.scaleX = 1.6320594404358049;
+		challengesBg.scaleY = 3.0956180063085617;
+		challengesBg.setOrigin(0, 0);
+		challengesBg.isFilled = true;
+		challengesBg.fillColor = 2763306;
+		challengesBg.fillAlpha = 0.85;
+		challengePanel.add(challengesBg);
 
 		// button_rectangle_depth_border_1
 		const button_rectangle_depth_border_1 = this.add.image(0, 0, "button_rectangle_depth_border");
@@ -122,21 +114,337 @@ class Lobby extends Phaser.Scene {
 
 		this.editorCreate();
 
-		const stubNames = ["Alice", "Bob", "Cara", "Dan", "Eve"];
-    const style = { fontSize: 20, color: "#e8e8e8" };
+		// Get current user
+		this.currentUser = this.game.registry.get('currentUser');
 
-    stubNames.forEach((name, i) => {
-        const row = this.add.text(10, 90 + i * 28, "• " + name, style);
-        this.onlinePanel.add(row);          // << add as child of the panel
-    });
-/*
+		// Create containers for dynamic content
+		this.onlineUsersContainer = this.add.container(10, 90);
+		this.onlinePanel.add(this.onlineUsersContainer);
+
+		// Create challenges sections
+		this.add.text(1081, 60, "Received", { fontSize: '20px', color: '#000000' });
+		this.receivedChallengesContainer = this.add.container(1081, 90);
+		
+		this.add.text(1081, 250, "Sent", { fontSize: '20px', color: '#000000' });
+		this.sentChallengesContainer = this.add.container(1081, 280);
+
+		// Create active games panel
+		this.createActiveGamesPanel();
+
+		// Setup logout button
+		this.setupLogoutButton();
+
 		// Start polling for updates
-        this.startPolling();
+		this.startPolling();
 
-        // Initial data load
-        this.loadOnlineUsers();
-        this.loadChallenges();
-        this.loadActiveGames();*/
+		// Initial data load
+		this.loadOnlineUsers();
+		this.loadChallenges();
+		this.loadActiveGames();
+	}
+
+	createActiveGamesPanel() {
+		// Active Games Panel Background
+		const gamesPanelBg = this.add.rectangle(640, 500, 600, 150, 0x2a2a2a, 0.85);
+		
+		// Active Games Title
+		this.add.text(640, 440, "Active Games", {
+			fontSize: '28px',
+			color: '#ffffff'
+		}).setOrigin(0.5);
+
+		// Container for game list
+		this.activeGamesContainer = this.add.container(640, 480);
+	}
+
+	setupLogoutButton() {
+		// Store reference to logout image for hover effects
+		const logoutImageRef = this.logoutImage;
+
+		// Logout button events
+		this.loginButton.on('pointerover', () => {
+			logoutImageRef.setTexture("button_rectangle_depth_gradient");
+			this.loginButton.setScale(0.75, 0.75);
+		});
+
+		this.loginButton.on('pointerout', () => {
+			logoutImageRef.setTexture("button_rectangle_depth_flat");
+			this.loginButton.setScale(0.7, 0.7);
+		});
+
+		this.loginButton.on('pointerdown', () => {
+			logoutImageRef.setTexture("button_rectangle_depth_gradient");
+			this.loginButton.setScale(0.68, 0.68);
+			this.handleLogout();
+		});
+
+		this.loginButton.on('pointerup', () => {
+			if (this.loginButton.input && this.loginButton.input.localX !== undefined) {
+				logoutImageRef.setTexture("button_rectangle_depth_gradient");
+				this.loginButton.setScale(0.75, 0.75);
+			} else {
+				logoutImageRef.setTexture("button_rectangle_depth_flat");
+				this.loginButton.setScale(0.7, 0.7);
+			}
+		});
+	}
+
+	startPolling() {
+		// Poll every 2 seconds
+		this.pollInterval = this.time.addEvent({
+			delay: 2000,
+			callback: () => {
+				this.loadOnlineUsers();
+				this.loadChallenges();
+				this.loadActiveGames();
+			},
+			loop: true
+		});
+	}
+
+	async loadOnlineUsers() {
+		try {
+			const response = await fetch('https://cardbreaker.onrender.com/api/users/online', {
+				credentials: 'include'
+			});
+			const data = await response.json();
+			
+			if (data.users) {
+				this.updateOnlineUsersList(data.users);
+			}
+		} catch (error) {
+			console.error('Error loading online users:', error);
+		}
+	}
+
+	async loadChallenges() {
+		try {
+			const response = await fetch('https://cardbreaker.onrender.com/api/challenge/pending', {
+				credentials: 'include'
+			});
+			const data = await response.json();
+			
+			this.updateChallengesList(data.received || [], data.sent || []);
+		} catch (error) {
+			console.error('Error loading challenges:', error);
+		}
+	}
+
+	async loadActiveGames() {
+		try {
+			const response = await fetch('https://cardbreaker.onrender.com/api/game/active', {
+				credentials: 'include'
+			});
+			const data = await response.json();
+			
+			if (data.games) {
+				this.updateActiveGamesList(data.games);
+			}
+		} catch (error) {
+			console.error('Error loading active games:', error);
+		}
+	}
+
+	updateOnlineUsersList(users) {
+		// Clear existing
+		this.onlineUsersContainer.removeAll(true);
+
+		const style = { fontSize: '20px', color: '#e8e8e8' };
+
+		users.forEach((user, index) => {
+			// Skip current user
+			if (user.username === this.currentUser.username) return;
+
+			const y = index * 35;
+
+			// Username
+			const userText = this.add.text(0, y, `• ${user.username}`, style);
+			this.onlineUsersContainer.add(userText);
+
+			// Challenge button (simple rectangle for now)
+			const challengeBtn = this.add.rectangle(150, y + 10, 80, 25, 0x4444ff)
+				.setInteractive({ useHandCursor: true });
+			
+			const challengeText = this.add.text(150, y + 10, 'Challenge', {
+				fontSize: '14px',
+				color: '#ffffff'
+			}).setOrigin(0.5);
+
+			this.onlineUsersContainer.add(challengeBtn);
+			this.onlineUsersContainer.add(challengeText);
+
+			// Challenge button events
+			challengeBtn.on('pointerover', () => challengeBtn.setFillStyle(0x6666ff));
+			challengeBtn.on('pointerout', () => challengeBtn.setFillStyle(0x4444ff));
+			challengeBtn.on('pointerdown', () => this.sendChallenge(user.user_id));
+		});
+	}
+
+	updateChallengesList(received, sent) {
+		// Update received challenges
+		this.receivedChallengesContainer.removeAll(true);
+		
+		received.forEach((challenge, index) => {
+			const y = index * 35;
+
+			const challengerText = this.add.text(0, y, challenge.challenger_name, {
+				fontSize: '18px',
+				color: '#000000'
+			});
+			this.receivedChallengesContainer.add(challengerText);
+
+			// Accept button
+			const acceptBtn = this.add.rectangle(120, y + 10, 60, 25, 0x44ff44)
+				.setInteractive({ useHandCursor: true });
+			
+			const acceptText = this.add.text(120, y + 10, 'Accept', {
+				fontSize: '14px',
+				color: '#ffffff'
+			}).setOrigin(0.5);
+
+			this.receivedChallengesContainer.add(acceptBtn);
+			this.receivedChallengesContainer.add(acceptText);
+
+			acceptBtn.on('pointerover', () => acceptBtn.setFillStyle(0x66ff66));
+			acceptBtn.on('pointerout', () => acceptBtn.setFillStyle(0x44ff44));
+			acceptBtn.on('pointerdown', () => this.acceptChallenge(challenge.challenge_id));
+		});
+
+		// Update sent challenges
+		this.sentChallengesContainer.removeAll(true);
+		
+		sent.forEach((challenge, index) => {
+			const y = index * 35;
+
+			const challengedText = this.add.text(0, y, challenge.challenged_name, {
+				fontSize: '18px',
+				color: '#000000'
+			});
+			this.sentChallengesContainer.add(challengedText);
+
+			const statusText = this.add.text(120, y, 'Pending...', {
+				fontSize: '14px',
+				color: '#666666',
+				fontStyle: 'italic'
+			});
+			this.sentChallengesContainer.add(statusText);
+		});
+	}
+
+	updateActiveGamesList(games) {
+		this.activeGamesContainer.removeAll(true);
+
+		if (games.length === 0) {
+			const noGamesText = this.add.text(0, 0, 'No active games', {
+				fontSize: '18px',
+				color: '#888888',
+				fontStyle: 'italic'
+			}).setOrigin(0.5);
+			this.activeGamesContainer.add(noGamesText);
+			return;
+		}
+
+		games.forEach((game, index) => {
+			const x = (index - (games.length - 1) / 2) * 200;
+			
+			// Game button
+			const gameBtn = this.add.rectangle(x, 0, 180, 40, 0x555555)
+				.setInteractive({ useHandCursor: true });
+			
+			const gameText = this.add.text(x, 0, `Game vs ${game.opponent_name}`, {
+				fontSize: '16px',
+				color: '#ffffff'
+			}).setOrigin(0.5);
+
+			this.activeGamesContainer.add(gameBtn);
+			this.activeGamesContainer.add(gameText);
+
+			gameBtn.on('pointerover', () => gameBtn.setFillStyle(0x777777));
+			gameBtn.on('pointerout', () => gameBtn.setFillStyle(0x555555));
+			gameBtn.on('pointerdown', () => this.joinGame(game.game_id));
+		});
+	}
+
+	async sendChallenge(userId) {
+		try {
+			const response = await fetch('https://cardbreaker.onrender.com/api/challenge/send', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include',
+				body: JSON.stringify({ challenged_id: userId })
+			});
+
+			const data = await response.json();
+			
+			if (!response.ok) {
+				console.error('Challenge error:', data.error);
+			} else {
+				console.log('Challenge sent successfully');
+			}
+		} catch (error) {
+			console.error('Error sending challenge:', error);
+		}
+	}
+
+	async acceptChallenge(challengeId) {
+		try {
+			const response = await fetch('https://cardbreaker.onrender.com/api/challenge/accept', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include',
+				body: JSON.stringify({ challenge_id: challengeId })
+			});
+
+			const data = await response.json();
+			
+			if (response.ok && data.game_id) {
+				// Store game ID and transition to game scene
+				this.game.registry.set('currentGameId', data.game_id);
+				this.cleanupAndTransition('Game');
+			}
+		} catch (error) {
+			console.error('Error accepting challenge:', error);
+		}
+	}
+
+	async joinGame(gameId) {
+		// Store game ID and transition to game scene
+		this.game.registry.set('currentGameId', gameId);
+		this.cleanupAndTransition('Game');
+	}
+
+	async handleLogout() {
+		try {
+			const response = await fetch('https://cardbreaker.onrender.com/api/logout', {
+				method: 'POST',
+				credentials: 'include'
+			});
+
+			if (response.ok) {
+				// Clear user data
+				this.game.registry.remove('currentUser');
+				this.cleanupAndTransition('Login');
+			}
+		} catch (error) {
+			console.error('Error logging out:', error);
+		}
+	}
+
+	cleanupAndTransition(sceneName) {
+		// Stop polling
+		if (this.pollInterval) {
+			this.pollInterval.remove();
+		}
+		
+		// Transition to new scene
+		this.scene.start(sceneName);
+	}
+
+	shutdown() {
+		// Clean up when scene shuts down
+		if (this.pollInterval) {
+			this.pollInterval.remove();
+		}
 	}
 
 	/* END-USER-CODE */

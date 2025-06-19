@@ -101,7 +101,7 @@
                 {
                     "type": "Rectangle",
                     "id": "26df8d2d-27e4-4340-9c66-c5d0dd0003bd",
-                    "label": "ReceivedBg",
+                    "label": "ChallengesBg",
                     "scaleX": 1.6320594404358049,
                     "scaleY": 3.0956180063085617,
                     "originX": 0,
@@ -111,17 +111,6 @@
                     "fillAlpha": 0.85,
                     "width": 128,
                     "height": 128
-                },
-                {
-                    "type": "Text",
-                    "id": "b02d6900-c436-40fe-9cdf-be2ef52d6d9c",
-                    "label": "ReceivedLabel",
-                    "x": 103,
-                    "y": 80,
-                    "originX": 0.5,
-                    "text": "Received",
-                    "fontSize": "28px",
-                    "color": "#ffffffff"
                 },
                 {
                     "type": "Image",
