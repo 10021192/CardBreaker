@@ -1,8 +1,10 @@
 class Level extends Phaser.Scene {
     constructor() {
         super("Level");
-        
-        // Game state
+    }
+    
+    init() {
+        // Reset all game state when scene is initialized
         this.gameId = null;
         this.currentRound = 1;
         this.myLives = 3;
@@ -18,6 +20,7 @@ class Level extends Phaser.Scene {
         this.lastRoundNumber = 0;
         this.isSubmitting = false;
         this.yourRole = null;
+        this.roundResultShown = false;
     }
 
     create() {
@@ -74,8 +77,8 @@ class Level extends Phaser.Scene {
             color: '#ffffff'
         }).setOrigin(0.5);
         
-        // Player lives
-        this.playerLivesContainer = this.add.container(640, 520);
+        // Player lives (moved up to avoid overlap with cards)
+        this.playerLivesContainer = this.add.container(640, 510);
         this.updateLivesDisplay(this.playerLivesContainer, this.myLives);
         
         // Card selection area
@@ -411,14 +414,18 @@ class Level extends Phaser.Scene {
         const opponentName = game.yourRole === 'player1' ? game.player2Name : game.player1Name;
         this.opponentNameText.setText(opponentName);
         
-        // Update round
+        // Update round number
+        this.roundText.setText(`Round ${game.currentRound}`);
+        
+        // Check if this is a new round
         if (game.currentRound > this.currentRound) {
             // New round started
             this.currentRound = game.currentRound;
-            this.roundText.setText(`Round ${this.currentRound}`);
             this.gameState = 'selecting';
             this.clearSelections();
             this.opponentCardText.setText('?');
+            this.statusText.setText('Select your card');
+            this.roundResultShown = false;
         }
         
         // Update token availability
@@ -434,14 +441,14 @@ class Level extends Phaser.Scene {
         }
         
         // Update game state based on round info
-        if (currentRoundInfo.bothPlayed && this.gameState === 'waiting') {
+        if (currentRoundInfo.bothPlayed && !this.roundResultShown && this.gameState !== 'revealing') {
             // Both played, need to fetch round result
             this.fetchRoundResult();
-        } else if (currentRoundInfo.hasPlayed && this.gameState !== 'waiting') {
+        } else if (currentRoundInfo.hasPlayed && this.gameState === 'selecting') {
             this.gameState = 'waiting';
             this.statusText.setText('Waiting for opponent...');
-        } else if (!currentRoundInfo.hasPlayed && this.gameState === 'waiting') {
-            // New round, reset to selecting
+        } else if (!currentRoundInfo.hasPlayed && this.gameState !== 'selecting' && !this.roundResultShown) {
+            // Reset to selecting if haven't played yet
             this.gameState = 'selecting';
             this.statusText.setText('Select your card');
             this.clearSelections();
@@ -468,6 +475,8 @@ class Level extends Phaser.Scene {
     }
     
     async fetchRoundResult() {
+        if (this.roundResultShown) return; // Prevent duplicate fetches
+        
         try {
             const response = await fetch(`https://cardbreaker.onrender.com/api/game/${this.gameId}/history`, {
                 credentials: 'include'
@@ -488,12 +497,17 @@ class Level extends Phaser.Scene {
     
     handleRoundResult(round) {
         this.gameState = 'revealing';
+        this.roundResultShown = true;
         
-        // Determine cards based on role
-        const myCard = this.yourRole === 'player1' ? round.player1_card : round.player2_card;
-        const oppCard = this.yourRole === 'player1' ? round.player2_card : round.player1_card;
-        const myOriginal = this.yourRole === 'player1' ? round.player1_original_card : round.player2_original_card;
-        const myToken = this.yourRole === 'player1' ? round.player1_token_effect : round.player2_token_effect;
+        // Determine cards based on role - check if round has player IDs
+        const isPlayer1 = round.player1_id ? 
+            this.currentUser.user_id === round.player1_id :
+            this.yourRole === 'player1';
+            
+        const myCard = isPlayer1 ? round.player1_card : round.player2_card;
+        const oppCard = isPlayer1 ? round.player2_card : round.player1_card;
+        const myOriginal = isPlayer1 ? round.player1_original_card : round.player2_original_card;
+        const myToken = isPlayer1 ? round.player1_token_effect : round.player2_token_effect;
         
         // Show opponent's card
         this.opponentCardText.setText(oppCard.toUpperCase());
@@ -509,8 +523,7 @@ class Level extends Phaser.Scene {
         if (!round.round_winner_id) {
             message += "It's a tie!";
         } else {
-            const playerWon = (this.yourRole === 'player1' && round.round_winner_id === round.player1_id) ||
-                            (this.yourRole === 'player2' && round.round_winner_id === round.player2_id);
+            const playerWon = round.round_winner_id === this.currentUser.user_id;
             
             if (playerWon) {
                 message += 'You won this round!';
@@ -524,8 +537,7 @@ class Level extends Phaser.Scene {
         // Reset after delay
         this.time.delayedCall(3000, () => {
             this.opponentCardText.setText('?');
-            this.statusText.setText('Select your card');
-            // Let updateGameState handle the state transition
+            // Don't change status text here - let updateGameState handle it
         });
     }
     
