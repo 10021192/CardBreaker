@@ -211,7 +211,6 @@ class Login extends Phaser.Scene {
             const data = await response.json();
 
             if (response.ok) {
-                console.log('Login successful:', data);
                 // Store user data if needed
                 this.game.registry.set('currentUser', { username: data.username });
                 // Transition to lobby scene
@@ -247,7 +246,6 @@ class Login extends Phaser.Scene {
             const data = await response.json();
 
             if (response.ok) {
-                console.log('Registration successful');
                 this.showError('Registration successful! Please login.', '#44ff44');
                 // Switch back to login mode
                 setTimeout(() => {

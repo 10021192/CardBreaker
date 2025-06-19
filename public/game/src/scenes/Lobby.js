@@ -453,12 +453,10 @@ class Lobby extends Phaser.Scene {
 			});
 
 			const data = await response.json();
-			console.log('[acceptChallenge] status:', response.status, 'payload:', data);
 
 			if (response.ok && data.gameId) {
 				// Store game ID and transition to game scene
 				this.game.registry.set('currentGameId', data.gameId);
-				console.log('[Lobby] switching to Level');
 				this.cleanupAndTransition('Level');
 			}
 			else if (!response.ok) {
@@ -479,7 +477,6 @@ class Lobby extends Phaser.Scene {
 			});
 
 			const data = await res.json();
-			console.log('[declineChallenge] status:', res.status, 'payload:', data);
 
 			/* ───── force a fresh list right away ───── */
     		if (res.ok) this.loadChallenges();
@@ -497,7 +494,6 @@ class Lobby extends Phaser.Scene {
 			});
 
 			const data = await res.json();
-			console.log('[cancelChallenge] status:', res.status, 'payload:', data);
 
 			/* ───── force a fresh list right away ───── */
     		if (res.ok) this.loadChallenges();
