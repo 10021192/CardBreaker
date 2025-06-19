@@ -257,6 +257,13 @@ class Lobby extends Phaser.Scene {
 			if (data.games) {
 				this.updateActiveGamesList(data.games);
 			}
+
+			// endpoint returns an *array*, not { games : [...] }
+			const list = Array.isArray(data) ? data : data.games;
+			if (list && list.length !== undefined) {
+				this.updateActiveGamesList(list);
+			}
+
 		} catch (error) {
 			console.error('Error loading active games:', error);
 		}
