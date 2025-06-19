@@ -60,7 +60,8 @@ class Level extends Phaser.Scene {
         this.updateLivesDisplay(this.opponentLivesContainer, this.opponentLives);
         
         // Opponent's played card (hidden until reveal)
-        this.opponentCardBack = this.add.image(640, 180, 'card_back');
+		this.opponentCardBack = this.add.image(640, 180, "card_back_png")
+										.setDisplaySize(80, 120);
         this.opponentCardText = this.add.text(640, 180, '?', {
             fontSize: '48px',
             color: '#ffffff'
