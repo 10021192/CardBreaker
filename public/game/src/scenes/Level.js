@@ -168,7 +168,7 @@ class Level extends Phaser.Scene {
         }).setOrigin(0.5);
         
         // Game status
-        this.statusText = self.add.text(640, 360, '', {
+        this.statusText = this.add.text(640, 360, '', {
             fontSize: '24px',
             color: '#ffff00'
         }).setOrigin(0.5);
