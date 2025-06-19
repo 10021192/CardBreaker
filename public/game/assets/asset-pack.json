@@ -17,9 +17,34 @@
                 "key": "button_rectangle_depth_gradient"
             },
             {
+                "url": "assets/card_attack.png",
+                "type": "image",
+                "key": "card_attack"
+            },
+            {
+                "url": "assets/card_back.png",
+                "type": "image",
+                "key": "card_back"
+            },
+            {
+                "url": "assets/card_counter.png",
+                "type": "image",
+                "key": "card_counter"
+            },
+            {
+                "url": "assets/card_shield.png",
+                "type": "image",
+                "key": "card_shield"
+            },
+            {
                 "url": "assets/dino.png",
                 "key": "dino",
                 "type": "image"
+            },
+            {
+                "url": "assets/heart.png",
+                "type": "image",
+                "key": "heart"
             },
             {
                 "url": "assets/slide_vertical_color.png",
@@ -50,6 +75,16 @@
                 "url": "assets/slide_vertical_colorbig.png",
                 "type": "image",
                 "key": "slide_vertical_colorbig"
+            },
+            {
+                "url": "assets/token_life.png",
+                "type": "image",
+                "key": "token_life"
+            },
+            {
+                "url": "assets/token_switch.png",
+                "type": "image",
+                "key": "token_switch"
             }
         ]
     },
