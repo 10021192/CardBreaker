@@ -87,8 +87,8 @@ class Level extends Phaser.Scene {
     }
     
     createCardSelection() {
-        const cards = ['Attack', 'Counter', 'Shield'];
-        const cardColors = { 'Attack': 0xff4444, 'Counter': 0x4444ff, 'Shield': 0x44ff44 };
+        const art = { Attack: "card_attack", Counter: "card_counter", Shield: "card_shield" };
+  		const cards = Object.keys(art);
         
         this.cardButtons = [];
         
@@ -96,44 +96,24 @@ class Level extends Phaser.Scene {
             const x = 490 + (index * 150);
             const y = 580;
             
-            // Card background
-            const cardBg = this.add.rectangle(x, y, 100, 140, cardColors[card])
-                .setInteractive({ useHandCursor: true });
-            
-            // Card text
-            const cardText = this.add.text(x, y, card, {
-                fontSize: '18px',
-                color: '#ffffff'
-            }).setOrigin(0.5);
+            const img = this.add.image(x, y, art[card])
+                       .setDisplaySize(100, 140)
+                       .setInteractive({ useHandCursor: true });
             
             // Selection highlight
-            const highlight = this.add.rectangle(x, y, 110, 150, 0xffff00, 0)
-                .setStrokeStyle(4, 0xffff00, 0);
+            const hl = this.add.rectangle(x, y, 110, 150, 0xffff00, 0)
+                       .setStrokeStyle(4, 0xffff00, 0);
             
-            this.cardButtons.push({ bg: cardBg, text: cardText, highlight, type: card });
+            this.cardButtons.push({ img, highlight: hl, type: card });
             
-            // Card selection events
-            cardBg.on('pointerover', () => {
-                if (this.gameState === 'selecting') {
-                    cardBg.setScale(1.1);
-                }
-            });
-            
-            cardBg.on('pointerout', () => {
-                cardBg.setScale(1);
-            });
-            
-            cardBg.on('pointerdown', () => {
-                if (this.gameState === 'selecting') {
-                    if (this.selectedToken === 'switch' && this.selectedCard) {
-                        // Selecting card to switch to
-                        this.selectSwitchCard(card);
-                    } else {
-                        // Normal card selection
-                        this.selectCard(card);
-                    }
-                }
-            });
+            // hover / select
+			img.on('pointerover', () => this.gameState === 'selecting' && img.setScale(1.1));
+			img.on('pointerout',  () => img.setScale(1));
+			img.on('pointerdown', () => {
+				if (this.gameState !== 'selecting') return;
+				if (this.selectedToken === 'switch' && this.selectedCard)
+					this.selectSwitchCard(card); else this.selectCard(card);
+			});
         });
     }
     
@@ -145,24 +125,21 @@ class Level extends Phaser.Scene {
         }).setOrigin(0.5);
         
         // Switch token
-        this.switchToken = this.add.circle(70, 350, 30, 0x9944ff)
-            .setInteractive({ useHandCursor: true });
-        this.add.text(70, 350, 'S', {
-            fontSize: '24px',
-            color: '#ffffff'
-        }).setOrigin(0.5);
+        this.switchToken = this.add.image(70, 350, "token_switch")
+                             .setDisplaySize(60, 60)
+                             .setInteractive({ useHandCursor: true });
+		this.lifeToken = this.add.image(130, 350, "token_life")
+								.setDisplaySize(60, 60)
+								.setInteractive({ useHandCursor: true });
         this.switchCooldownText = this.add.text(70, 390, '', {
             fontSize: '14px',
             color: '#ff4444'
         }).setOrigin(0.5);
         
         // Life token
-        this.lifeToken = this.add.circle(130, 350, 30, 0xff4499)
-            .setInteractive({ useHandCursor: true });
-        this.add.text(130, 350, 'L', {
-            fontSize: '24px',
-            color: '#ffffff'
-        }).setOrigin(0.5);
+          this.lifeToken = this.add.image(130, 350, "token_life")
+                           .setDisplaySize(60, 60)
+                           .setInteractive({ useHandCursor: true });
         this.lifeCooldownText = this.add.text(130, 390, '', {
             fontSize: '14px',
             color: '#ff4444'
@@ -224,15 +201,17 @@ class Level extends Phaser.Scene {
         quitButton.on('pointerdown', () => this.quitGame());
     }
     
-    updateLivesDisplay(container, lives) {
-        container.removeAll(true);
-        
-        for (let i = 0; i < 3; i++) {
-            const x = (i - 1) * 40;
-            const heart = this.add.circle(x, 0, 15, i < lives ? 0xff0000 : 0x444444);
-            container.add(heart);
-        }
-    }
+    // ───────────────── updateLivesDisplay ─────────────────
+	updateLivesDisplay(container, lives) {
+		container.removeAll(true);
+		for (let i = 0; i < 3; i++) {
+			const x = (i - 1) * 40;
+			const heart = this.add.image(x, 0, "heart")
+								.setDisplaySize(30, 30)
+								.setTint(i < lives ? 0xffffff : 0x444444);
+			container.add(heart);
+		}
+	}
     
     selectCard(cardType) {
         if (this.gameState !== 'selecting') return;
@@ -356,7 +335,7 @@ class Level extends Phaser.Scene {
             }
         } catch (error) {
             console.error('Error playing card:', error);
-            // More specific error message instead of generic "Connection error"
+            
             if (error.message.includes('oppCard')) {
                 this.statusText.setText('Error processing round result');
             } else {
@@ -558,11 +537,11 @@ class Level extends Phaser.Scene {
         this.statusText.setText(message);
         this.statusText.setFontSize('20px'); // Slightly smaller for multiline
         
-        // Reset after longer delay (5 seconds instead of 3)
+        
         this.time.delayedCall(5000, () => {
             this.opponentCardText.setText('?');
             this.statusText.setFontSize('24px'); // Reset font size
-            // Don't change status text here - let updateGameState handle it
+            
         });
     }
     
