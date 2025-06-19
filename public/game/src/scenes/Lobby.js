@@ -39,28 +39,28 @@ class Lobby extends Phaser.Scene {
 		onlinePanel.add(button_rectangle_depth_border);
 
 		// OnlinePlayers
-		const onlinePlayers = this.add.text(104, 19, "", {});
+		const onlinePlayers = this.add.text(104, 20, "", {});
 		onlinePlayers.setOrigin(0.5, 0);
 		onlinePlayers.text = "Online";
 		onlinePlayers.setStyle({ "color": "#000000ff", "fontSize": "28px" });
 		onlinePanel.add(onlinePlayers);
 
-		// LoginButton
-		const loginButton = this.add.container(640, 679);
-		loginButton.setInteractive(new Phaser.Geom.Rectangle(-192, -64, 384, 128), Phaser.Geom.Rectangle.Contains);
-		loginButton.scaleX = 0.7;
-		loginButton.scaleY = 0.7;
+		// LogoutButton
+		const logoutButton = this.add.container(640, 679);
+		logoutButton.setInteractive(new Phaser.Geom.Rectangle(-192, -64, 384, 128), Phaser.Geom.Rectangle.Contains);
+		logoutButton.scaleX = 0.7;
+		logoutButton.scaleY = 0.7;
 
 		// LogoutImage
 		const logoutImage = this.add.image(0, 3, "button_rectangle_depth_flat");
-		loginButton.add(logoutImage);
+		logoutButton.add(logoutImage);
 
 		// LogoutText
 		const logoutText = this.add.text(0, 0, "", {});
 		logoutText.setOrigin(0.5, 0.5);
 		logoutText.text = "Logout";
 		logoutText.setStyle({ "align": "center", "fontSize": "48px" });
-		loginButton.add(logoutText);
+		logoutButton.add(logoutText);
 
 		// ChallengePanel
 		const challengePanel = this.add.container(1071, 0);
@@ -91,7 +91,7 @@ class Lobby extends Phaser.Scene {
 
 		this.onlinePanel = onlinePanel;
 		this.logoutImage = logoutImage;
-		this.loginButton = loginButton;
+		this.logoutButton = logoutButton;
 		this.challengePanel = challengePanel;
 
 		this.events.emit("scene-awake");
@@ -102,7 +102,7 @@ class Lobby extends Phaser.Scene {
 	/** @type {Phaser.GameObjects.Image} */
 	logoutImage;
 	/** @type {Phaser.GameObjects.Container} */
-	loginButton;
+	logoutButton;
 	/** @type {Phaser.GameObjects.Container} */
 	challengePanel;
 
@@ -116,28 +116,29 @@ class Lobby extends Phaser.Scene {
 
 		// Get current user
 		this.currentUser = this.game.registry.get('currentUser');
+		console.log('Current user:', this.currentUser);
 
 		// Create containers for dynamic content
 		this.onlineUsersContainer = this.add.container(10, 90);
 		this.onlinePanel.add(this.onlineUsersContainer);
 
 		// Create challenges sections
-		const receivedLabel = this.add.text(1081, 60, "Received", { 
+		const receivedLabel = this.add.text(10, 60, "Received", { 
 			fontSize: '20px', 
 			color: '#e8e8e8'
 		});
 		this.challengePanel.add(receivedLabel);  // Add to panel so it moves with it
-		
-		this.receivedChallengesContainer = this.add.container(1081, 90);
+
+		this.receivedChallengesContainer = this.add.container(10, 90);
 		this.challengePanel.add(this.receivedChallengesContainer);
-		
-		const sentLabel = this.add.text(1081, 250, "Sent", { 
+
+		const sentLabel = this.add.text(10, 250, "Sent", { 
 			fontSize: '20px', 
 			color: '#e8e8e8'
 		});
 		this.challengePanel.add(sentLabel);  // Add to panel so it moves with it
-		
-		this.sentChallengesContainer = this.add.container(1081, 280);
+
+		this.sentChallengesContainer = this.add.container(10, 280);
 		this.challengePanel.add(this.sentChallengesContainer);
 
 		// Create active games panel
@@ -158,7 +159,7 @@ class Lobby extends Phaser.Scene {
 	createActiveGamesPanel() {
 		// Active Games Panel Background
 		const gamesPanelBg = this.add.rectangle(640, 500, 600, 150, 0x2a2a2a, 0.85);
-		
+
 		// Active Games Title
 		this.add.text(640, 440, "Active Games", {
 			fontSize: '28px',
@@ -174,29 +175,29 @@ class Lobby extends Phaser.Scene {
 		const logoutImageRef = this.logoutImage;
 
 		// Logout button events
-		this.loginButton.on('pointerover', () => {
+		this.logoutButton.on('pointerover', () => {
 			logoutImageRef.setTexture("button_rectangle_depth_gradient");
-			this.loginButton.setScale(0.75, 0.75);
+			this.logoutButton.setScale(0.75, 0.75);
 		});
 
-		this.loginButton.on('pointerout', () => {
+		this.logoutButton.on('pointerout', () => {
 			logoutImageRef.setTexture("button_rectangle_depth_flat");
-			this.loginButton.setScale(0.7, 0.7);
+			this.logoutButton.setScale(0.7, 0.7);
 		});
 
-		this.loginButton.on('pointerdown', () => {
+		this.logoutButton.on('pointerdown', () => {
 			logoutImageRef.setTexture("button_rectangle_depth_gradient");
-			this.loginButton.setScale(0.68, 0.68);
+			this.logoutButton.setScale(0.68, 0.68);
 			this.handleLogout();
 		});
 
-		this.loginButton.on('pointerup', () => {
-			if (this.loginButton.input && this.loginButton.input.localX !== undefined) {
+		this.logoutButton.on('pointerup', () => {
+			if (this.logoutButton.input && this.logoutButton.input.localX !== undefined) {
 				logoutImageRef.setTexture("button_rectangle_depth_gradient");
-				this.loginButton.setScale(0.75, 0.75);
+				this.logoutButton.setScale(0.75, 0.75);
 			} else {
 				logoutImageRef.setTexture("button_rectangle_depth_flat");
-				this.loginButton.setScale(0.7, 0.7);
+				this.logoutButton.setScale(0.7, 0.7);
 			}
 		});
 	}
@@ -220,7 +221,7 @@ class Lobby extends Phaser.Scene {
 				credentials: 'include'
 			});
 			const data = await response.json();
-			
+
 			if (data.users) {
 				this.updateOnlineUsersList(data.users);
 			}
@@ -235,7 +236,7 @@ class Lobby extends Phaser.Scene {
 				credentials: 'include'
 			});
 			const data = await response.json();
-			
+
 			this.updateChallengesList(data.received || [], data.sent || []);
 		} catch (error) {
 			console.error('Error loading challenges:', error);
@@ -248,7 +249,7 @@ class Lobby extends Phaser.Scene {
 				credentials: 'include'
 			});
 			const data = await response.json();
-			
+
 			if (data.games) {
 				this.updateActiveGamesList(data.games);
 			}
@@ -262,10 +263,10 @@ class Lobby extends Phaser.Scene {
 		this.onlineUsersContainer.removeAll(true);
 
 		const style = { fontSize: '20px', color: '#e8e8e8' };
-		
+
 		// Filter out current user and display others
 		const otherUsers = users.filter(user => user.username !== this.currentUser.username);
-		
+
 		if (otherUsers.length === 0) {
 			const noUsersText = this.add.text(0, 0, '• No other users online', {
 				fontSize: '18px',
@@ -286,7 +287,7 @@ class Lobby extends Phaser.Scene {
 			// Challenge button (simple rectangle for now)
 			const challengeBtn = this.add.rectangle(150, y + 10, 80, 25, 0x4444ff)
 				.setInteractive({ useHandCursor: true });
-			
+
 			const challengeText = this.add.text(150, y + 10, 'Challenge', {
 				fontSize: '14px',
 				color: '#ffffff'
@@ -305,20 +306,20 @@ class Lobby extends Phaser.Scene {
 	updateChallengesList(received, sent) {
 		// Update received challenges
 		this.receivedChallengesContainer.removeAll(true);
-		
+
 		received.forEach((challenge, index) => {
 			const y = index * 35;
 
 			const challengerText = this.add.text(0, y, challenge.challenger_name, {
 				fontSize: '18px',
-				color: '#e8e8e8'  // Changed from black to light grey
+				color: '#e8e8e8'
 			});
 			this.receivedChallengesContainer.add(challengerText);
 
 			// Accept button
 			const acceptBtn = this.add.rectangle(120, y + 10, 60, 25, 0x44ff44)
 				.setInteractive({ useHandCursor: true });
-			
+
 			const acceptText = this.add.text(120, y + 10, 'Accept', {
 				fontSize: '14px',
 				color: '#ffffff'
@@ -334,13 +335,13 @@ class Lobby extends Phaser.Scene {
 
 		// Update sent challenges
 		this.sentChallengesContainer.removeAll(true);
-		
+
 		sent.forEach((challenge, index) => {
 			const y = index * 35;
 
 			const challengedText = this.add.text(0, y, challenge.challenged_name, {
 				fontSize: '18px',
-				color: '#e8e8e8'  // Changed from black to light grey
+				color: '#e8e8e8'
 			});
 			this.sentChallengesContainer.add(challengedText);
 
@@ -368,11 +369,11 @@ class Lobby extends Phaser.Scene {
 
 		games.forEach((game, index) => {
 			const x = (index - (games.length - 1) / 2) * 200;
-			
+
 			// Game button
 			const gameBtn = this.add.rectangle(x, 0, 180, 40, 0x555555)
 				.setInteractive({ useHandCursor: true });
-			
+
 			const gameText = this.add.text(x, 0, `Game vs ${game.opponent_name}`, {
 				fontSize: '16px',
 				color: '#ffffff'
@@ -397,7 +398,7 @@ class Lobby extends Phaser.Scene {
 			});
 
 			const data = await response.json();
-			
+
 			if (!response.ok) {
 				console.error('Challenge error:', data.error);
 			} else {
@@ -418,7 +419,7 @@ class Lobby extends Phaser.Scene {
 			});
 
 			const data = await response.json();
-			
+
 			if (response.ok && data.game_id) {
 				// Store game ID and transition to game scene
 				this.game.registry.set('currentGameId', data.game_id);
@@ -457,7 +458,7 @@ class Lobby extends Phaser.Scene {
 		if (this.pollInterval) {
 			this.pollInterval.remove();
 		}
-		
+
 		// Transition to new scene
 		this.scene.start(sceneName);
 	}

@@ -46,7 +46,7 @@
                     "id": "16496396-d2af-4a23-a689-9adfcc902c63",
                     "label": "OnlinePlayers",
                     "x": 104,
-                    "y": 19,
+                    "y": 20,
                     "originX": 0.5,
                     "text": "Online",
                     "fontSize": "28px",
@@ -57,7 +57,7 @@
         {
             "type": "Container",
             "id": "6edceced-5862-4537-8e75-0b00bb5527e2",
-            "label": "LoginButton",
+            "label": "LogoutButton",
             "scope": "CLASS",
             "hitArea.shape": "RECTANGLE",
             "hitArea.x": -192,
