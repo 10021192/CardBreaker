@@ -457,6 +457,36 @@ class Lobby extends Phaser.Scene {
 		}
 	}
 
+	async declineChallenge(challengeId) {
+		try {
+			const res = await fetch('https://cardbreaker.onrender.com/api/challenge/decline', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			credentials: 'include',
+			body: JSON.stringify({ challengeId: challengeId })
+			});
+
+			const data = await res.json();
+			console.log('[declineChallenge] status:', res.status, 'payload:', data);
+			
+		} catch (e) { console.error('Error declining:', e); }
+	}
+
+	async cancelChallenge(challengeId) {
+		try {
+			const res = await fetch('https://cardbreaker.onrender.com/api/challenge/cancel', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			credentials: 'include',
+			body: JSON.stringify({ challengeId: challengeId })
+			});
+
+			const data = await res.json();
+			console.log('[cancelChallenge] status:', res.status, 'payload:', data);
+
+		} catch (e) { console.error('Error cancelling:', e); }
+	}
+
 	async joinGame(gameId) {
 		// Store game ID and transition to game scene
 		this.game.registry.set('currentGameId', gameId);
