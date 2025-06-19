@@ -314,17 +314,17 @@ class Lobby extends Phaser.Scene {
 		received.forEach((challenge, index) => {
 			const y = index * 35 + 6;
 
-			const challengerText = this.add.text(0, y, challenge.challenger_name, {
+			const challengerText = this.add.text(0, y + 5, challenge.challenger_name, {
 				fontSize: '18px',
 				color: '#e8e8e8'
 			});
 			this.receivedChallengesContainer.add(challengerText);
 
 			// Accept button
-			const acceptBtn = this.add.rectangle(90, y + 10, 70, 25, 0x44ff44)
+			const acceptBtn = this.add.rectangle(95, y + 15, 70, 25, 0x44ff44)
 				.setInteractive({ useHandCursor: true });
 
-			const acceptText = this.add.text(100, y + 10, 'Accept', {
+			const acceptText = this.add.text(95, y + 15, 'Accept', {
 				fontSize: '14px',
 				color: '#ffffff'
 			}).setOrigin(0.5);
@@ -337,9 +337,9 @@ class Lobby extends Phaser.Scene {
 			acceptBtn.on('pointerdown', () => this.acceptChallenge(challenge.challenge_id));
 
 			// Decline button
-			const declineBtn  = this.add.rectangle(160, y + 10, 63, 25, 0xff4444)
+			const declineBtn  = this.add.rectangle(165, y + 15, 63, 25, 0xff4444)
 				.setInteractive({ useHandCursor: true });
-			const declineTxt  = this.add.text(170, y + 10, 'Decline', {
+			const declineTxt  = this.add.text(165, y + 15, 'Decline', {
 				fontSize: '14px', color: '#ffffff'
 			}).setOrigin(0.5);
 
