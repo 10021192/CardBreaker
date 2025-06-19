@@ -249,7 +249,7 @@ class Lobby extends Phaser.Scene {
 
 	async loadActiveGames() {
 		try {
-			const response = await fetch('https://cardbreaker.onrender.com/api/game/active', {
+			const response = await fetch('https://cardbreaker.onrender.com/api/games/active', {
 				credentials: 'include'
 			});
 			const data = await response.json();
