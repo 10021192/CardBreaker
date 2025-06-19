@@ -188,10 +188,12 @@ class Level extends Phaser.Scene {
             color: '#ffffff'
         }).setOrigin(0.5);
         
-        // Game status
+        // Game status - multiline support with word wrap
         this.statusText = this.add.text(640, 360, '', {
             fontSize: '24px',
-            color: '#ffff00'
+            color: '#ffff00',
+            align: 'center',
+            wordWrap: { width: 500 }
         }).setOrigin(0.5);
     }
     
@@ -353,7 +355,12 @@ class Level extends Phaser.Scene {
             }
         } catch (error) {
             console.error('Error playing card:', error);
-            this.statusText.setText('Connection error');
+            // More specific error message instead of generic "Connection error"
+            if (error.message.includes('oppCard')) {
+                this.statusText.setText('Error processing round result');
+            } else {
+                this.statusText.setText('Network error - please check connection');
+            }
         } finally {
             this.isSubmitting = false;
         }
@@ -508,6 +515,13 @@ class Level extends Phaser.Scene {
         const oppCard = isPlayer1 ? round.player2_card : round.player1_card;
         const myOriginal = isPlayer1 ? round.player1_original_card : round.player2_original_card;
         const myToken = isPlayer1 ? round.player1_token_effect : round.player2_token_effect;
+        const oppToken = isPlayer1 ? round.player2_token_effect : round.player1_token_effect;
+        
+        // Safety check for undefined cards
+        if (!myCard || !oppCard) {
+            console.error('Round result missing card data:', round);
+            return;
+        }
         
         // Show opponent's card
         this.opponentCardText.setText(oppCard.toUpperCase());
@@ -517,7 +531,15 @@ class Level extends Phaser.Scene {
         if (myToken === 'switch' && myOriginal) {
             message += ` (switched from ${myOriginal.toUpperCase()})`;
         }
-        message += `, opponent played ${oppCard.toUpperCase()}. `;
+        message += `\nOpponent played ${oppCard.toUpperCase()}`;
+        if (oppToken === 'switch' && (isPlayer1 ? round.player2_original_card : round.player1_original_card)) {
+            message += ` (switched from ${(isPlayer1 ? round.player2_original_card : round.player1_original_card).toUpperCase()})`;
+        }
+        message += '\n';
+        
+        // Add token usage info
+        if (myToken === 'life') message += 'You used Life token! ';
+        if (oppToken === 'life') message += 'Opponent used Life token! ';
         
         // Determine winner
         if (!round.round_winner_id) {
@@ -533,10 +555,12 @@ class Level extends Phaser.Scene {
         }
         
         this.statusText.setText(message);
+        this.statusText.setFontSize('20px'); // Slightly smaller for multiline
         
-        // Reset after delay
-        this.time.delayedCall(3000, () => {
+        // Reset after longer delay (5 seconds instead of 3)
+        this.time.delayedCall(5000, () => {
             this.opponentCardText.setText('?');
+            this.statusText.setFontSize('24px'); // Reset font size
             // Don't change status text here - let updateGameState handle it
         });
     }
