@@ -403,7 +403,7 @@ class Lobby extends Phaser.Scene {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				credentials: 'include',
-				body: JSON.stringify({ challenged_id: userId })
+				body: JSON.stringify({ challengedId: userId })
 			});
 
 			const data = await response.json();
