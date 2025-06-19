@@ -60,7 +60,7 @@ class Level extends Phaser.Scene {
         this.updateLivesDisplay(this.opponentLivesContainer, this.opponentLives);
         
         // Opponent's played card (hidden until reveal)
-		this.opponentCardBack = this.add.image(640, 180, "card_back_png")
+		this.opponentCardBack = this.add.image(640, 180, "card_back")
 										.setDisplaySize(80, 120);
         this.opponentCardText = this.add.text(640, 180, '?', {
             fontSize: '48px',
@@ -100,17 +100,12 @@ class Level extends Phaser.Scene {
                        .setDisplaySize(100, 140)
                        .setInteractive({ useHandCursor: true });
             
-            // Selection highlight
-            const hl = this.add.rectangle(x, y, 110, 150, 0xffff00, 0)
-                       .setStrokeStyle(4, 0xffff00, 0);
-            
-            this.cardButtons.push({ img, highlight: hl, type: card });
-            
 			img.on('pointerdown', () => {
 				if (this.gameState !== 'selecting') return;
 				if (this.selectedToken === 'switch' && this.selectedCard)
 					this.selectSwitchCard(card); else this.selectCard(card);
 			});
+			this.cardButtons.push({ img, type:card });
         });
     }
     
@@ -216,16 +211,6 @@ class Level extends Phaser.Scene {
         this.selectedCard = cardType;
         this.switchToCard = null;
         
-        // Update visual selection
-        this.cardButtons.forEach(card => {
-            if (card.type === cardType) {
-                card.highlight.setAlpha(1);
-                card.highlight.setStrokeStyle(4, 0xffff00);
-            } else {
-                card.highlight.setAlpha(0);
-            }
-        });
-        
         if (this.selectedToken === 'switch') {
             this.statusText.setText(`Selected: ${cardType} - Now select card to switch to`);
             this.switchHintText.setText('Click another card to switch to').setVisible(true);
@@ -239,19 +224,6 @@ class Level extends Phaser.Scene {
         if (this.selectedToken !== 'switch' || !this.selectedCard) return;
         
         this.switchToCard = cardType;
-        
-        // Update visual - show switch target with different color
-        this.cardButtons.forEach(card => {
-            if (card.type === this.selectedCard) {
-                card.highlight.setAlpha(1);
-                card.highlight.setStrokeStyle(4, 0xffff00);
-            } else if (card.type === cardType) {
-                card.highlight.setAlpha(1);
-                card.highlight.setStrokeStyle(4, 0x9944ff); // Purple for switch target
-            } else {
-                card.highlight.setAlpha(0);
-            }
-        });
         
         this.statusText.setText(`Will play ${this.selectedCard} → ${cardType}`);
         this.switchHintText.setText(`Switch: ${this.selectedCard} → ${cardType}`).setVisible(true);
@@ -275,15 +247,6 @@ class Level extends Phaser.Scene {
                 this.switchHintText.setText('Click another card to switch to').setVisible(true);
             }
         }
-        
-        // Update visual selection
-        Object.keys(this.tokenButtons).forEach(type => {
-            if (type === this.selectedToken) {
-                this.tokenButtons[type].setStrokeStyle(3, 0xffff00);
-            } else {
-                this.tokenButtons[type].setStrokeStyle(0);
-            }
-        });
     }
     
     async playCard() {
@@ -348,9 +311,6 @@ class Level extends Phaser.Scene {
         this.selectedToken = null;
         this.switchToCard = null;
         this.switchHintText.setVisible(false);
-        
-        this.cardButtons.forEach(card => card.highlight.setAlpha(0));
-        Object.values(this.tokenButtons).forEach(token => token.setStrokeStyle(0));
     }
     
     startPolling() {
@@ -454,7 +414,6 @@ class Level extends Phaser.Scene {
             this.selectedToken = null;
             this.switchToCard = null;
             this.switchHintText.setVisible(false);
-            Object.values(this.tokenButtons).forEach(token => token.setStrokeStyle(0));
         }
     }
     
