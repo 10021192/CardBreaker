@@ -451,7 +451,7 @@ class Lobby extends Phaser.Scene {
 			if (response.ok && data.game_id) {
 				// Store game ID and transition to game scene
 				this.game.registry.set('currentGameId', data.game_id);
-				//this.cleanupAndTransition('Game');
+				this.cleanupAndTransition('Level');
 			}
 			else if (!response.ok) {
           		console.error('Accept error:', data.error);
@@ -500,7 +500,7 @@ class Lobby extends Phaser.Scene {
 	async joinGame(gameId) {
 		// Store game ID and transition to game scene
 		this.game.registry.set('currentGameId', gameId);
-		this.cleanupAndTransition('Game');
+		this.cleanupAndTransition('Level');
 	}
 
 	async handleLogout() {
