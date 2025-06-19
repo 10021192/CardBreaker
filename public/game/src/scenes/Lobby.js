@@ -274,8 +274,10 @@ class Lobby extends Phaser.Scene {
 		// Filter out current user and display others
 		const otherUsers = users.filter(user => user.username !== this.currentUser.username);
 
+		console.log('Filtered users to display:', otherUsers);
+
 		if (otherUsers.length === 0) {
-			const noUsersText = this.add.text(0, 0, '• No other users online', {
+			const noUsersText = this.add.text(0, 50, '• No other users online', {
 				fontSize: '18px',
 				color: '#888888',
 				fontStyle: 'italic'
