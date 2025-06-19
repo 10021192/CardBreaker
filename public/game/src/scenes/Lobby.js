@@ -229,9 +229,9 @@ class Lobby extends Phaser.Scene {
 
 			console.log('Online users response:', data);
 
-			if (data.users) {
-				this.updateOnlineUsersList(data.users);
-			}
+			// accept either plain array *or* an { users: [...] } wrapper
+			const list = Array.isArray(data) ? data : (data.users || []);
+			this.updateOnlineUsersList(list);
 		} catch (error) {
 			console.error('Error loading online users:', error);
 		}
