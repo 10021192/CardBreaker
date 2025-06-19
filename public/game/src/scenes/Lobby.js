@@ -128,7 +128,7 @@ class Lobby extends Phaser.Scene {
 		this.onlinePanel.add(this.onlineUsersContainer);
 
 		// Create challenges sections
-		const receivedLabel = this.add.text(10, 60, "Received", { 
+		const receivedLabel = this.add.text(10, 70, "Received", { 
 			fontSize: '20px', 
 			color: '#e8e8e8'
 		});
@@ -277,7 +277,7 @@ class Lobby extends Phaser.Scene {
 		console.log('Filtered users to display:', otherUsers);
 
 		if (otherUsers.length === 0) {
-			const noUsersText = this.add.text(0, 50, '• No other users online', {
+			const noUsersText = this.add.text(0, 50, '• No users online', {
 				fontSize: '18px',
 				color: '#888888',
 				fontStyle: 'italic'
@@ -326,7 +326,7 @@ class Lobby extends Phaser.Scene {
 			this.receivedChallengesContainer.add(challengerText);
 
 			// Accept button
-			const acceptBtn = this.add.rectangle(120, y + 10, 60, 25, 0x44ff44)
+			const acceptBtn = this.add.rectangle(120, y + 10, 70, 25, 0x44ff44)
 				.setInteractive({ useHandCursor: true });
 
 			const acceptText = this.add.text(120, y + 10, 'Accept', {
@@ -424,7 +424,7 @@ class Lobby extends Phaser.Scene {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				credentials: 'include',
-				body: JSON.stringify({ challenge_id: challengeId })
+				body: JSON.stringify({ challengeId: challengeId })
 			});
 
 			const data = await response.json();
