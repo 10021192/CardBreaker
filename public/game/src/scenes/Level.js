@@ -68,6 +68,7 @@ class Level extends Phaser.Scene {
 	create() {
 
 		this.editorCreate();
+		console.log('[Level] create called');
 	}
 
 	/* END-USER-CODE */

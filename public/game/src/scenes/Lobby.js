@@ -451,6 +451,7 @@ class Lobby extends Phaser.Scene {
 			if (response.ok && data.game_id) {
 				// Store game ID and transition to game scene
 				this.game.registry.set('currentGameId', data.game_id);
+				console.log('[Lobby] switching to Level');
 				this.cleanupAndTransition('Level');
 			}
 			else if (!response.ok) {
