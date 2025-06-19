@@ -448,9 +448,9 @@ class Lobby extends Phaser.Scene {
 			const data = await response.json();
 			console.log('[acceptChallenge] status:', response.status, 'payload:', data);
 
-			if (response.ok && data.game_id) {
+			if (response.ok && data.gameId) {
 				// Store game ID and transition to game scene
-				this.game.registry.set('currentGameId', data.game_id);
+				this.game.registry.set('currentGameId', data.gameId);
 				console.log('[Lobby] switching to Level');
 				this.cleanupAndTransition('Level');
 			}
