@@ -56,7 +56,7 @@ class Level extends Phaser.Scene {
         }).setOrigin(0.5);
         
         // Opponent lives
-        this.opponentLivesContainer = this.add.container(640, 120);
+        this.opponentLivesContainer = this.add.container(440, 100);
         this.updateLivesDisplay(this.opponentLivesContainer, this.opponentLives);
         
         // Opponent's played card (hidden until reveal)
@@ -78,7 +78,7 @@ class Level extends Phaser.Scene {
         }).setOrigin(0.5);
         
         // Player lives (moved up to avoid overlap with cards)
-        this.playerLivesContainer = this.add.container(640, 510);
+        this.playerLivesContainer = this.add.container(440, 490);
         this.updateLivesDisplay(this.playerLivesContainer, this.myLives);
         
         // Card selection area
