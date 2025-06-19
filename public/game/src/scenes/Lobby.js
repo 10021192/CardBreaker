@@ -114,9 +114,14 @@ class Lobby extends Phaser.Scene {
 
 		this.editorCreate();
 
-		// Get current user
-		this.currentUser = this.game.registry.get('currentUser');
-		console.log('Current user:', this.currentUser);
+		// Get current user - fallback to username from login if needed
+		this.currentUser = this.game.registry.get('currentUser') || { username: 'Unknown' };
+		console.log('Current user:', this.currentUser); // Debug log
+		
+		// If currentUser doesn't have username property, it might be stored differently
+		if (!this.currentUser.username && typeof this.currentUser === 'string') {
+			this.currentUser = { username: this.currentUser };
+		}
 
 		// Create containers for dynamic content
 		this.onlineUsersContainer = this.add.container(10, 90);
@@ -221,6 +226,8 @@ class Lobby extends Phaser.Scene {
 				credentials: 'include'
 			});
 			const data = await response.json();
+
+			console.log('Online users response:', data);
 
 			if (data.users) {
 				this.updateOnlineUsersList(data.users);

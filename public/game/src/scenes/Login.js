@@ -213,7 +213,7 @@ class Login extends Phaser.Scene {
             if (response.ok) {
                 console.log('Login successful:', data);
                 // Store user data if needed
-                this.game.registry.set('currentUser', data.user);
+                this.game.registry.set('currentUser', { username: data.username });
                 // Transition to lobby scene
                 this.cleanDom();
                 this.scene.start('Lobby');
