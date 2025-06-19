@@ -122,11 +122,23 @@ class Lobby extends Phaser.Scene {
 		this.onlinePanel.add(this.onlineUsersContainer);
 
 		// Create challenges sections
-		this.add.text(1081, 60, "Received", { fontSize: '20px', color: '#000000' });
-		this.receivedChallengesContainer = this.add.container(1081, 90);
+		const receivedLabel = this.add.text(1081, 60, "Received", { 
+			fontSize: '20px', 
+			color: '#e8e8e8'
+		});
+		this.challengePanel.add(receivedLabel);  // Add to panel so it moves with it
 		
-		this.add.text(1081, 250, "Sent", { fontSize: '20px', color: '#000000' });
+		this.receivedChallengesContainer = this.add.container(1081, 90);
+		this.challengePanel.add(this.receivedChallengesContainer);
+		
+		const sentLabel = this.add.text(1081, 250, "Sent", { 
+			fontSize: '20px', 
+			color: '#e8e8e8'
+		});
+		this.challengePanel.add(sentLabel);  // Add to panel so it moves with it
+		
 		this.sentChallengesContainer = this.add.container(1081, 280);
+		this.challengePanel.add(this.sentChallengesContainer);
 
 		// Create active games panel
 		this.createActiveGamesPanel();
@@ -250,11 +262,21 @@ class Lobby extends Phaser.Scene {
 		this.onlineUsersContainer.removeAll(true);
 
 		const style = { fontSize: '20px', color: '#e8e8e8' };
+		
+		// Filter out current user and display others
+		const otherUsers = users.filter(user => user.username !== this.currentUser.username);
+		
+		if (otherUsers.length === 0) {
+			const noUsersText = this.add.text(0, 0, '• No other users online', {
+				fontSize: '18px',
+				color: '#888888',
+				fontStyle: 'italic'
+			});
+			this.onlineUsersContainer.add(noUsersText);
+			return;
+		}
 
-		users.forEach((user, index) => {
-			// Skip current user
-			if (user.username === this.currentUser.username) return;
-
+		otherUsers.forEach((user, index) => {
 			const y = index * 35;
 
 			// Username
@@ -289,7 +311,7 @@ class Lobby extends Phaser.Scene {
 
 			const challengerText = this.add.text(0, y, challenge.challenger_name, {
 				fontSize: '18px',
-				color: '#000000'
+				color: '#e8e8e8'  // Changed from black to light grey
 			});
 			this.receivedChallengesContainer.add(challengerText);
 
@@ -318,7 +340,7 @@ class Lobby extends Phaser.Scene {
 
 			const challengedText = this.add.text(0, y, challenge.challenged_name, {
 				fontSize: '18px',
-				color: '#000000'
+				color: '#e8e8e8'  // Changed from black to light grey
 			});
 			this.sentChallengesContainer.add(challengedText);
 
