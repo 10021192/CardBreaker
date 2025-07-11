@@ -377,6 +377,15 @@ class Level extends Phaser.Scene {
         
         // Update round number
         this.roundText.setText(`Round ${game.currentRound}`);
+
+        // Check if we need to fetch results for a previous round
+        if (game.currentRound > this.lastRoundNumber && this.lastRoundNumber > 0) {
+            // New round started, fetch the previous round's result
+            this.fetchSpecificRoundResult(this.lastRoundNumber);
+        }
+        
+        // Update last round number
+        this.lastRoundNumber = game.currentRound;
         
         // Check if this is a new round
         if (game.currentRound > this.currentRound) {
@@ -455,12 +464,56 @@ class Level extends Phaser.Scene {
         }
     }
     
+    async fetchSpecificRoundResult(roundNumber) {
+        try {
+            const response = await fetch(`https://cardbreaker.onrender.com/api/game/${this.gameId}/history`, {
+                credentials: 'include'
+            });
+            
+            const rounds = await response.json();
+            
+            if (response.ok && rounds.length > 0) {
+                // Find the specific round
+                const targetRound = rounds.find(r => r.round_number === roundNumber);
+                if (targetRound && !this.roundHistoryEntries.some(e => e.roundNumber === roundNumber)) {
+                    // Process this round if we haven't already
+                    this.processHistoryRound(targetRound);
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching specific round result:', error);
+        }
+    }
+
+    processHistoryRound(round) {
+        // Determine cards based on role
+        const isPlayer1 = this.yourRole === 'player1';
+        
+        const myCard = isPlayer1 ? round.player1_card : round.player2_card;
+        const oppCard = isPlayer1 ? round.player2_card : round.player1_card;
+        const myOriginal = isPlayer1 ? round.player1_original_card : round.player2_original_card;
+        const oppOriginal = isPlayer1 ? round.player2_original_card : round.player1_original_card;
+        const myToken = isPlayer1 ? round.player1_token_effect : round.player2_token_effect;
+        const oppToken = isPlayer1 ? round.player2_token_effect : round.player1_token_effect;
+        
+        // Add to round history only
+        this.addRoundToHistory(round.round_number, {
+            myCard,
+            oppCard,
+            myOriginal,
+            oppOriginal,
+            myToken,
+            oppToken,
+            winner: round.round_winner_id,
+            roundNumber: round.round_number // Store this to prevent duplicates
+        });
+    }
+
     handleRoundResult(round) {
         this.gameState = 'revealing';
         this.roundResultShown = true;
         
         // Handle both data structures from playCard response and fetchRoundResult
-        // If this is from playCard response, it has a different structure
         let roundData;
         if (round.player1Card !== undefined) {
             // This is from playCard response with camelCase fields
@@ -472,24 +525,29 @@ class Level extends Phaser.Scene {
                 player2_original_card: round.player2OriginalCard,
                 player1_token_effect: round.player1TokenUsed,
                 player2_token_effect: round.player2TokenUsed,
-                round_winner_id: round.roundWinner
+                round_winner_id: round.roundWinner,
+                player1_id: round.player1Id,
+                player2_id: round.player2Id
             };
         } else {
             // This is from fetchRoundResult with snake_case fields
             roundData = round;
         }
         
-        // Determine cards based on role
-        const isPlayer1 = roundData.player1_id ? 
-            this.currentUser.user_id === roundData.player1_id :
-            this.yourRole === 'player1';
-            
+        // Determine cards based on role - use yourRole which is always set
+        const isPlayer1 = this.yourRole === 'player1';
+        
         const myCard = isPlayer1 ? roundData.player1_card : roundData.player2_card;
         const oppCard = isPlayer1 ? roundData.player2_card : roundData.player1_card;
         const myOriginal = isPlayer1 ? roundData.player1_original_card : roundData.player2_original_card;
         const oppOriginal = isPlayer1 ? roundData.player2_original_card : roundData.player1_original_card;
         const myToken = isPlayer1 ? roundData.player1_token_effect : roundData.player2_token_effect;
         const oppToken = isPlayer1 ? roundData.player2_token_effect : roundData.player1_token_effect;
+        
+        // Get my player ID based on role
+        const myPlayerId = isPlayer1 ? 
+            (roundData.player1_id || this.currentUser.user_id) : 
+            (roundData.player2_id || this.currentUser.user_id);
         
         // Safety check
         if (!myCard || !oppCard) {
@@ -500,7 +558,7 @@ class Level extends Phaser.Scene {
         // Show opponent's card
         this.opponentCardText.setText(oppCard.toUpperCase());
         
-        // Add to round history
+        // Add to round history with fixed winner determination
         this.addRoundToHistory(roundData.round_number || this.currentRound, {
             myCard,
             oppCard,
@@ -508,7 +566,9 @@ class Level extends Phaser.Scene {
             oppOriginal,
             myToken,
             oppToken,
-            winner: roundData.round_winner_id
+            winner: roundData.round_winner_id,
+            myPlayerId: myPlayerId,
+            roundNumber: roundData.round_number || this.currentRound
         });
         
         // Build status message
@@ -529,11 +589,11 @@ class Level extends Phaser.Scene {
         }
         message += '\n';
         
-        // Result
         if (!roundData.round_winner_id) {
             message += "TIE!";
         } else {
-            const playerWon = roundData.round_winner_id === this.currentUser.user_id;
+            // Compare winner_id with the appropriate player ID
+            const playerWon = roundData.round_winner_id === myPlayerId;
             if (playerWon) {
                 message += 'You WON!';
             } else {
@@ -551,9 +611,15 @@ class Level extends Phaser.Scene {
     }
 
     addRoundToHistory(roundNumber, data) {
+        // Check if this round is already in history
+        if (this.roundHistoryEntries.some(e => e.roundNumber === roundNumber)) {
+            return; // Already added
+        }
+        
         // Create entry container
         const entryY = this.roundHistoryEntries.length * 60;
         const entry = this.add.container(0, entryY);
+        entry.roundNumber = roundNumber; // Store round number for duplicate check
         
         // Round number
         const roundLabel = this.add.text(-130, 0, `R${roundNumber}:`, {
@@ -584,18 +650,21 @@ class Level extends Phaser.Scene {
         }).setOrigin(0, 0.5);
         entry.add(cardsLabel);
         
-        // Result indicator
         let resultText = '';
         let resultColor = '#ffff00';
         
         if (!data.winner) {
             resultText = 'TIE';
-        } else if (data.winner === this.currentUser.user_id) {
-            resultText = 'WIN';
-            resultColor = '#00ff00';
         } else {
-            resultText = 'LOSS';
-            resultColor = '#ff4444';
+            // Use the player ID we determined in handleRoundResult
+            const playerWon = data.winner === (data.myPlayerId || this.currentUser.user_id);
+            if (playerWon) {
+                resultText = 'WIN';
+                resultColor = '#00ff00';
+            } else {
+                resultText = 'LOSS';
+                resultColor = '#ff4444';
+            }
         }
         
         const resultLabel = this.add.text(80, 0, resultText, {
