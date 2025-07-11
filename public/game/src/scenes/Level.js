@@ -556,6 +556,15 @@ class Level extends Phaser.Scene {
         
         // Store role
         this.yourRole = game.yourRole;
+
+        // IMPORTANT: Store the actual player IDs from the game
+        // These are needed for proper winner determination
+        if (!this.gamePlayerIds) {
+            this.gamePlayerIds = {
+                player1: game.yourRole === 'player1' ? this.currentUser.user_id : null,
+                player2: game.yourRole === 'player2' ? this.currentUser.user_id : null
+            };
+        }
         
         // Update lives
         this.myLives = game.yourLives;
@@ -701,6 +710,16 @@ class Level extends Phaser.Scene {
         const oppToken = isPlayer1 ? round.player2_token_effect : round.player1_token_effect;
         // IMPORTANT: Get the actual player ID from the round data
         const myPlayerId = isPlayer1 ? round.player1_id : round.player2_id;
+
+        console.log('processHistoryRound:', {
+            roundNumber: round.round_number,
+            yourRole: this.yourRole,
+            isPlayer1: isPlayer1,
+            player1_id: round.player1_id,
+            player2_id: round.player2_id,
+            winner_id: round.round_winner_id,
+            currentUserId: this.currentUser.user_id
+        });
         
         // Add to round history only
         this.addRoundToHistory(round.round_number, {
@@ -751,7 +770,17 @@ class Level extends Phaser.Scene {
         const myToken = isPlayer1 ? roundData.player1_token_effect : roundData.player2_token_effect;
         const oppToken = isPlayer1 ? roundData.player2_token_effect : roundData.player1_token_effect;
         
-        const myPlayerId = isPlayer1 ? roundData.player1_id : roundData.player2_id;
+        //const myPlayerId = isPlayer1 ? roundData.player1_id : roundData.player2_id;
+
+        console.log('handleRoundResult:', {
+            roundNumber: roundData.round_number || this.currentRound,
+            yourRole: this.yourRole,
+            isPlayer1: isPlayer1,
+            player1_id: roundData.player1_id,
+            player2_id: roundData.player2_id,
+            winner_id: roundData.round_winner_id,
+            currentUserId: this.currentUser.user_id
+        });
 
         // Safety check
         if (!myCard || !oppCard) {
@@ -762,7 +791,6 @@ class Level extends Phaser.Scene {
         // Show opponent's card
         this.opponentCardText.setText(oppCard.toUpperCase());
         
-        // Add to round history with proper player ID
         this.addRoundToHistory(roundData.round_number || this.currentRound, {
             myCard,
             oppCard,
@@ -771,7 +799,7 @@ class Level extends Phaser.Scene {
             myToken,
             oppToken,
             winner: roundData.round_winner_id,
-            myPlayerId: myPlayerId,
+            isPlayer1: isPlayer1, // Pass role explicitly
             roundNumber: roundData.round_number || this.currentRound
         });
         
@@ -796,7 +824,9 @@ class Level extends Phaser.Scene {
         if (!roundData.round_winner_id) {
             message += "TIE!";
         } else {
-            const playerWon = roundData.round_winner_id == myPlayerId;
+            // Check if player won based on role and winner
+            const playerWon = (isPlayer1 && roundData.round_winner_id == roundData.player1_id) ||
+                            (!isPlayer1 && roundData.round_winner_id == roundData.player2_id);
             if (playerWon) {
                 message += 'You WON!';
             } else {
@@ -859,7 +889,29 @@ class Level extends Phaser.Scene {
         if (!data.winner) {
             resultText = 'TIE';
         } else {
-            const playerWon = data.winner == data.myPlayerId;
+            // Determine if current player won based on their role
+            let playerWon = false;
+            
+            if (data.isPlayer1 !== undefined) {
+                // We know the player's role
+                playerWon = (data.isPlayer1 && data.winner == this.currentUser.user_id) ||
+                        (!data.isPlayer1 && data.winner == this.currentUser.user_id);
+                
+                // If the winner matches my user ID, I won
+                playerWon = (data.winner == this.currentUser.user_id);
+                
+                console.log('Round history winner check:', {
+                    round: roundNumber,
+                    winnerId: data.winner,
+                    myUserId: this.currentUser.user_id,
+                    isPlayer1: data.isPlayer1,
+                    playerWon: playerWon
+                });
+            } else {
+                // Fallback: just check if winner matches current user
+                playerWon = (data.winner == this.currentUser.user_id);
+            }
+
             if (playerWon) {
                 resultText = 'WIN';
                 resultColor = '#00ff00';
