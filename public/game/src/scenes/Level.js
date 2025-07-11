@@ -594,8 +594,8 @@ class Level extends Phaser.Scene {
         if (!roundData.round_winner_id) {
             message += "TIE!";
         } else {
-            // Compare winner_id with the appropriate player ID
-            const playerWon = roundData.round_winner_id === myPlayerId;
+            const winnerId  = Number(roundData.round_winner_id);
+            const playerWon = winnerId === Number(myPlayerId);
             if (playerWon) {
                 message += 'You WON!';
             } else {
@@ -658,7 +658,8 @@ class Level extends Phaser.Scene {
         if (!data.winner) {
             resultText = 'TIE';
         } else {
-            const playerWon = data.winner === data.myPlayerId;
+            const winnerId  = Number(roundData.round_winner_id);
+            const playerWon = winnerId === Number(myPlayerId);
             if (playerWon) {
                 resultText = 'WIN';
                 resultColor = '#00ff00';
