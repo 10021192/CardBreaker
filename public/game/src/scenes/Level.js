@@ -801,7 +801,7 @@ class Level extends Phaser.Scene {
             myToken,
             oppToken,
             winner: roundData.round_winner_id,
-            isPlayer1: isPlayer1, // Pass role explicitly
+            iWon: iWon, // Pass role explicitly
             roundNumber: roundData.round_number || this.currentRound
         });
         
