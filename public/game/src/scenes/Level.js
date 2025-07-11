@@ -495,6 +495,7 @@ class Level extends Phaser.Scene {
         const oppOriginal = isPlayer1 ? round.player2_original_card : round.player1_original_card;
         const myToken = isPlayer1 ? round.player1_token_effect : round.player2_token_effect;
         const oppToken = isPlayer1 ? round.player2_token_effect : round.player1_token_effect;
+        const myPlayerId = isPlayer1 ? round.player1_id : round.player2_id;
         
         // Add to round history only
         this.addRoundToHistory(round.round_number, {
@@ -504,6 +505,7 @@ class Level extends Phaser.Scene {
             oppOriginal,
             myToken,
             oppToken,
+            myPlayerId,
             winner: round.round_winner_id,
             roundNumber: round.round_number // Store this to prevent duplicates
         });
@@ -656,8 +658,7 @@ class Level extends Phaser.Scene {
         if (!data.winner) {
             resultText = 'TIE';
         } else {
-            // Use the player ID we determined in handleRoundResult
-            const playerWon = data.winner === (data.myPlayerId || this.currentUser.user_id);
+            const playerWon = data.winner === data.myPlayerId;
             if (playerWon) {
                 resultText = 'WIN';
                 resultColor = '#00ff00';
