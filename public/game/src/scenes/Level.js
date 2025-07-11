@@ -89,7 +89,7 @@ class Level extends Phaser.Scene {
     
     createCardSelection() {
         const art = { Attack: "attack_card", Counter: "counter_card", Shield: "shield_card" };
-  		const cards = Object.keys(art);
+        const cards = Object.keys(art);
         
         this.cardButtons = [];
         this.selectedCardHighlight = null;
@@ -100,55 +100,49 @@ class Level extends Phaser.Scene {
             
             // Create highlight border (hidden by default)
             const highlight = this.add.rectangle(x, y, 110, 150, 0xffff00, 0)
-            .setStrokeStyle(3, 0xffff00, 1)
-            .setVisible(false);
-
+                .setStrokeStyle(3, 0xffff00, 1)
+                .setVisible(false);
+            
             const img = this.add.image(x, y, art[card])
-                       .setDisplaySize(100, 140)
-                       .setInteractive({ useHandCursor: true })
-                       .setAlpha(0.8);
-
+                    .setDisplaySize(100, 140)
+                    .setInteractive({ useHandCursor: true })
+                    .setAlpha(0.8); // Slightly dimmed by default
+            
+            // Store the base scale after setDisplaySize
+            const baseScaleX = img.scaleX;
+            const baseScaleY = img.scaleY;
+            
             // Hover effects
             img.on('pointerover', () => {
                 if (this.gameState === 'selecting') {
                     img.setAlpha(1); // Full brightness on hover
-                    this.tweens.add({
-                        targets: img,
-                        scaleX: 1.05,
-                        scaleY: 1.05,
-                        duration: 100,
-                        ease: 'Power1'
-                    });
+                    // Very subtle scale increase
+                    img.setScale(baseScaleX * 1.05, baseScaleY * 1.05);
                 }
             });
             
             img.on('pointerout', () => {
                 if (this.gameState === 'selecting') {
                     img.setAlpha(this.selectedCard === card ? 1 : 0.8);
-                    this.tweens.add({
-                        targets: img,
-                        scaleX: 1,
-                        scaleY: 1,
-                        duration: 100,
-                        ease: 'Power1'
-                    });
+                    // Return to base scale
+                    img.setScale(baseScaleX, baseScaleY);
                 }
             });
             
-			img.on('pointerdown', () => {
-				if (this.gameState !== 'selecting') return;
-
-                // Click animation
+            img.on('pointerdown', () => {
+                if (this.gameState !== 'selecting') return;
+                
+                // Click animation - subtle pulse
                 this.tweens.add({
                     targets: img,
-                    scaleX: 0.95,
-                    scaleY: 0.95,
+                    scaleX: baseScaleX * 0.95,
+                    scaleY: baseScaleY * 0.95,
                     duration: 50,
                     yoyo: true,
                     ease: 'Power1'
                 });
-
-				if (this.selectedToken === 'switch' && this.selectedCard) {
+                
+                if (this.selectedToken === 'switch' && this.selectedCard) {
                     this.selectSwitchCard(card);
                 } else {
                     this.selectCard(card);
@@ -166,8 +160,8 @@ class Level extends Phaser.Scene {
                     });
                 }
             });
-
-			this.cardButtons.push({ img, type:card });
+            
+            this.cardButtons.push({ img, type: card, highlight, baseScaleX, baseScaleY });
         });
     }
     
@@ -199,6 +193,10 @@ class Level extends Phaser.Scene {
                         .setInteractive({ useHandCursor: true })
                         .setAlpha(0.8);
         
+        // Store base scales
+        const switchBaseScale = { x: this.switchToken.scaleX, y: this.switchToken.scaleY };
+        const lifeBaseScale = { x: this.lifeToken.scaleX, y: this.lifeToken.scaleY };
+        
         // Cooldown texts
         this.switchCooldownText = this.add.text(70, 390, '', {
             fontSize: '14px',
@@ -213,17 +211,13 @@ class Level extends Phaser.Scene {
         // Token hover effects
         [this.switchToken, this.lifeToken].forEach((token, index) => {
             const tokenType = index === 0 ? 'switch' : 'life';
+            const baseScale = index === 0 ? switchBaseScale : lifeBaseScale;
             
             token.on('pointerover', () => {
                 if (this.gameState === 'selecting' && this.tokenAvailable) {
                     token.setAlpha(1);
-                    this.tweens.add({
-                        targets: token,
-                        scaleX: 1.1,
-                        scaleY: 1.1,
-                        duration: 100,
-                        ease: 'Power1'
-                    });
+                    // Very subtle scale increase
+                    token.setScale(baseScale.x * 1.1, baseScale.y * 1.1);
                 }
             });
             
@@ -231,23 +225,18 @@ class Level extends Phaser.Scene {
                 if (this.gameState === 'selecting') {
                     const isSelected = this.selectedToken === tokenType;
                     token.setAlpha(isSelected ? 1 : (this.tokenAvailable ? 0.8 : 0.5));
-                    this.tweens.add({
-                        targets: token,
-                        scaleX: 1,
-                        scaleY: 1,
-                        duration: 100,
-                        ease: 'Power1'
-                    });
+                    // Return to base scale
+                    token.setScale(baseScale.x, baseScale.y);
                 }
             });
             
             token.on('pointerdown', () => {
                 if (this.gameState === 'selecting' && this.tokenAvailable) {
-                    // Click animation
+                    // Click animation - subtle pulse
                     this.tweens.add({
                         targets: token,
-                        scaleX: 0.9,
-                        scaleY: 0.9,
+                        scaleX: baseScale.x * 0.9,
+                        scaleY: baseScale.y * 0.9,
                         duration: 50,
                         yoyo: true,
                         ease: 'Power1'
@@ -523,8 +512,11 @@ class Level extends Phaser.Scene {
         this.switchTokenHighlight.setVisible(false);
         this.lifeTokenHighlight.setVisible(false);
         
-        // Reset alphas
-        this.cardButtons.forEach(btn => btn.img.setAlpha(0.8));
+        // Reset alphas and scales
+        this.cardButtons.forEach(btn => {
+            btn.img.setAlpha(0.8);
+            btn.img.setScale(btn.baseScaleX, btn.baseScaleY);
+        });
         if (this.tokenAvailable) {
             this.switchToken.setAlpha(0.8);
             this.lifeToken.setAlpha(0.8);
