@@ -37,6 +37,7 @@ class Level extends Phaser.Scene {
         this.createGameInfo();
         this.createTokenSection();
         this.createActionButtons();
+        this.createRoundHistoryPanel();
         
         // Start polling for game updates
         this.startPolling();
@@ -188,6 +189,25 @@ class Level extends Phaser.Scene {
         quitButton.on('pointerover', () => quitButton.setFillStyle(0xff6666));
         quitButton.on('pointerout', () => quitButton.setFillStyle(0xff4444));
         quitButton.on('pointerdown', () => this.quitGame());
+    }
+
+    createRoundHistoryPanel() {
+        // Round history panel on the right side
+        this.add.rectangle(1100, 200, 300, 350, 0x2a2a2a, 0.8)
+            .setStrokeStyle(2, 0x444444);
+        
+        // Panel title
+        this.add.text(1100, 50, 'Round History', {
+            fontSize: '24px',
+            color: '#ffffff',
+            fontStyle: 'bold'
+        }).setOrigin(0.5);
+        
+        // Container for round entries
+        this.roundHistoryContainer = this.add.container(1100, 100);
+        
+        // Store round history entries
+        this.roundHistoryEntries = [];
     }
     
     // ───────────────── updateLivesDisplay ─────────────────
@@ -447,189 +467,129 @@ class Level extends Phaser.Scene {
         const myCard = isPlayer1 ? round.player1_card : round.player2_card;
         const oppCard = isPlayer1 ? round.player2_card : round.player1_card;
         const myOriginal = isPlayer1 ? round.player1_original_card : round.player2_original_card;
+        const oppOriginal = isPlayer1 ? round.player2_original_card : round.player1_original_card;
         const myToken = isPlayer1 ? round.player1_token_effect : round.player2_token_effect;
         const oppToken = isPlayer1 ? round.player2_token_effect : round.player1_token_effect;
-        const oppOriginal = isPlayer1 ? round.player2_original_card : round.player1_original_card;
         
-        // Safety check for undefined cards
+        // Safety check
         if (!myCard || !oppCard) {
             console.error('Round result missing card data:', round);
             return;
         }
         
-        // First, show the opponent's card
+        // Show opponent's card
         this.opponentCardText.setText(oppCard.toUpperCase());
-        this.opponentCardBack.setVisible(false);
         
-        // Create a semi-transparent overlay for the round result
-        this.roundResultOverlay = this.add.rectangle(640, 360, 1280, 720, 0x000000, 0.7)
-            .setDepth(100)
-            .setInteractive(); // Block clicks behind
+        // Add to round history
+        this.addRoundToHistory(round.round_number || this.currentRound, {
+            myCard,
+            oppCard,
+            myOriginal,
+            oppOriginal,
+            myToken,
+            oppToken,
+            winner: round.round_winner_id
+        });
         
-        // Create container for round result display
-        this.roundResultContainer = this.add.container(640, 360).setDepth(101);
-        
-        // Background panel for results
-        const panel = this.add.rectangle(0, 0, 600, 400, 0x2a2a2a, 0.95)
-            .setStrokeStyle(3, 0xffffff);
-        this.roundResultContainer.add(panel);
-        
-        // Title
-        const titleText = this.add.text(0, -150, 'Round Result', {
-            fontSize: '36px',
-            color: '#ffffff',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
-        this.roundResultContainer.add(titleText);
-        
-        // Player cards display
-        const cardSize = { width: 80, height: 120 };
-        
-        // Your card
-        const yourCardLabel = this.add.text(-150, -80, 'You played:', {
-            fontSize: '20px',
-            color: '#ffffff'
-        }).setOrigin(0.5);
-        this.roundResultContainer.add(yourCardLabel);
-        
-        const yourCardBg = this.add.rectangle(-150, 0, cardSize.width, cardSize.height, 0x4444ff, 0.8)
-            .setStrokeStyle(2, 0xffffff);
-        this.roundResultContainer.add(yourCardBg);
-        
-        const yourCardText = this.add.text(-150, 0, myCard.toUpperCase(), {
-            fontSize: '24px',
-            color: '#ffffff',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
-        this.roundResultContainer.add(yourCardText);
-        
-        // Show switch effect if used
+        // Build status message
+        let message = `Round ${round.round_number || this.currentRound} Complete!\n`;
+        message += `You: ${myCard.toUpperCase()}`;
         if (myToken === 'switch' && myOriginal) {
-            const switchArrow = this.add.text(-150, 60, `(switched from ${myOriginal.toUpperCase()})`, {
-                fontSize: '14px',
-                color: '#9944ff'
-            }).setOrigin(0.5);
-            this.roundResultContainer.add(switchArrow);
+            message += ` (was ${myOriginal.toUpperCase()})`;
         }
-        
-        // VS text
-        const vsText = this.add.text(0, 0, 'VS', {
-            fontSize: '32px',
-            color: '#ffff00',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
-        this.roundResultContainer.add(vsText);
-        
-        // Opponent card
-        const oppCardLabel = this.add.text(150, -80, 'Opponent played:', {
-            fontSize: '20px',
-            color: '#ffffff'
-        }).setOrigin(0.5);
-        this.roundResultContainer.add(oppCardLabel);
-        
-        const oppCardBg = this.add.rectangle(150, 0, cardSize.width, cardSize.height, 0xff4444, 0.8)
-            .setStrokeStyle(2, 0xffffff);
-        this.roundResultContainer.add(oppCardBg);
-        
-        const oppCardText = this.add.text(150, 0, oppCard.toUpperCase(), {
-            fontSize: '24px',
-            color: '#ffffff',
-            fontStyle: 'bold'
-        }).setOrigin(0.5);
-        this.roundResultContainer.add(oppCardText);
-        
-        // Show opponent's switch if used
-        if (oppToken === 'switch' && oppOriginal) {
-            const oppSwitchText = this.add.text(150, 60, `(switched from ${oppOriginal.toUpperCase()})`, {
-                fontSize: '14px',
-                color: '#9944ff'
-            }).setOrigin(0.5);
-            this.roundResultContainer.add(oppSwitchText);
-        }
-        
-        // Token usage indicators
-        let tokenY = 90;
         if (myToken === 'life') {
-            const lifeTokenText = this.add.text(-150, tokenY, '🛡️ Life Token Used', {
-                fontSize: '16px',
-                color: '#44ff44'
-            }).setOrigin(0.5);
-            this.roundResultContainer.add(lifeTokenText);
-            tokenY += 25;
+            message += ' [LIFE]';
         }
-        
+        message += `\nOpponent: ${oppCard.toUpperCase()}`;
+        if (oppToken === 'switch' && oppOriginal) {
+            message += ` (was ${oppOriginal.toUpperCase()})`;
+        }
         if (oppToken === 'life') {
-            const oppLifeTokenText = this.add.text(150, tokenY, '🛡️ Life Token Used', {
-                fontSize: '16px',
-                color: '#44ff44'
-            }).setOrigin(0.5);
-            this.roundResultContainer.add(oppLifeTokenText);
+            message += ' [LIFE]';
         }
+        message += '\n';
         
-        // Result message
-        let resultMessage = '';
-        let resultColor = '#ffffff';
-        
+        // Result
         if (!round.round_winner_id) {
-            resultMessage = "It's a TIE!";
-            resultColor = '#ffff00';
+            message += "TIE!";
         } else {
             const playerWon = round.round_winner_id === this.currentUser.user_id;
-            
             if (playerWon) {
-                resultMessage = '🏆 You WON this round!';
-                resultColor = '#00ff00';
+                message += 'You WON!';
             } else {
-                if (myToken === 'life') {
-                    resultMessage = '🛡️ You lost but were saved by Life token!';
-                    resultColor = '#ff9900';
-                } else {
-                    resultMessage = '❌ You LOST this round!';
-                    resultColor = '#ff0000';
-                }
+                message += myToken === 'life' ? 'You lost (saved by Life token)' : 'You LOST!';
             }
         }
         
-        const resultText = this.add.text(0, 140, resultMessage, {
-            fontSize: '28px',
+        this.statusText.setText(message);
+        
+        // Reset after delay
+        this.time.delayedCall(4000, () => {
+            this.opponentCardText.setText('?');
+            this.statusText.setText('');
+        });
+    }
+
+    // Add this new method to handle round history:
+    addRoundToHistory(roundNumber, data) {
+        // Create entry container
+        const entryY = this.roundHistoryEntries.length * 60;
+        const entry = this.add.container(0, entryY);
+        
+        // Round number
+        const roundLabel = this.add.text(-130, 0, `R${roundNumber}:`, {
+            fontSize: '16px',
+            color: '#ffffff',
+            fontStyle: 'bold'
+        }).setOrigin(0, 0.5);
+        entry.add(roundLabel);
+        
+        // Cards played
+        let cardsText = `${data.myCard.charAt(0).toUpperCase()}`;
+        if (data.myToken === 'switch') cardsText += '→' + data.myOriginal.charAt(0).toUpperCase();
+        if (data.myToken === 'life') cardsText += '♥';
+        
+        cardsText += ' vs ';
+        
+        cardsText += `${data.oppCard.charAt(0).toUpperCase()}`;
+        if (data.oppToken === 'switch') cardsText += '→' + data.oppOriginal.charAt(0).toUpperCase();
+        if (data.oppToken === 'life') cardsText += '♥';
+        
+        const cardsLabel = this.add.text(-80, 0, cardsText, {
+            fontSize: '14px',
+            color: '#cccccc'
+        }).setOrigin(0, 0.5);
+        entry.add(cardsLabel);
+        
+        // Result indicator
+        let resultText = '';
+        let resultColor = '#ffff00';
+        
+        if (!data.winner) {
+            resultText = 'TIE';
+        } else if (data.winner === this.currentUser.user_id) {
+            resultText = 'WIN';
+            resultColor = '#00ff00';
+        } else {
+            resultText = 'LOSS';
+            resultColor = '#ff4444';
+        }
+        
+        const resultLabel = this.add.text(80, 0, resultText, {
+            fontSize: '14px',
             color: resultColor,
             fontStyle: 'bold'
-        }).setOrigin(0.5);
-        this.roundResultContainer.add(resultText);
+        }).setOrigin(0, 0.5);
+        entry.add(resultLabel);
         
-        // Continue button
-        const continueBtn = this.add.rectangle(0, 180, 150, 40, 0x44ff44)
-            .setInteractive({ useHandCursor: true });
-        const continueBtnText = this.add.text(0, 180, 'Continue', {
-            fontSize: '20px',
-            color: '#ffffff'
-        }).setOrigin(0.5);
+        // Add to container and array
+        this.roundHistoryContainer.add(entry);
+        this.roundHistoryEntries.push(entry);
         
-        this.roundResultContainer.add([continueBtn, continueBtnText]);
-        
-        // Button hover effects
-        continueBtn.on('pointerover', () => continueBtn.setFillStyle(0x66ff66));
-        continueBtn.on('pointerout', () => continueBtn.setFillStyle(0x44ff44));
-        
-        // Clean up function
-        const cleanup = () => {
-            if (this.roundResultOverlay) {
-                this.roundResultOverlay.destroy();
-                this.roundResultOverlay = null;
-            }
-            if (this.roundResultContainer) {
-                this.roundResultContainer.destroy(true);
-                this.roundResultContainer = null;
-            }
-            this.opponentCardText.setText('?');
-            this.opponentCardBack.setVisible(true);
-        };
-        
-        // Click to continue
-        continueBtn.on('pointerdown', cleanup);
-        
-        // Auto-continue after 7 seconds
-        this.roundResultTimer = this.time.delayedCall(7000, cleanup);
+        // Scroll if too many entries (show last 5)
+        if (this.roundHistoryEntries.length > 5) {
+            this.roundHistoryContainer.y = 100 - ((this.roundHistoryEntries.length - 5) * 60);
+        }
     }
     
     handleGameOver(won) {
