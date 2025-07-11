@@ -658,8 +658,8 @@ class Level extends Phaser.Scene {
         if (!data.winner) {
             resultText = 'TIE';
         } else {
-            const winnerId  = Number(data.winner);
-            const playerWon = winnerId === Number(data.myPlayerId);
+            const playerWon = Number(data.winner) === 
+                                Number(data.myPlayerId ?? this.currentUser.user_id);
             if (playerWon) {
                 resultText = 'WIN';
                 resultColor = '#00ff00';
