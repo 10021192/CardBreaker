@@ -409,7 +409,9 @@ router.post('/game/:gameId/play-card', (req, res) => {
                                 player1Lives: newPlayer1Lives,
                                 player2Lives: newPlayer2Lives,
                                 gameOver: gameOver,
-                                gameWinner: gameWinnerId
+                                gameWinner: gameWinnerId,
+                                player1Id: game.player1_id,
+                                player2Id: game.player2_id
                             }
                         });
                     }
