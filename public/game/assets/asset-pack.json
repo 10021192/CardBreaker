@@ -2,6 +2,11 @@
     "section1": {
         "files": [
             {
+                "url": "assets/attack_card.png",
+                "type": "image",
+                "key": "attack_card"
+            },
+            {
                 "url": "assets/button_rectangle_depth_border.png",
                 "type": "image",
                 "key": "button_rectangle_depth_border"
@@ -37,6 +42,11 @@
                 "key": "card_shield"
             },
             {
+                "url": "assets/counter_card.png",
+                "type": "image",
+                "key": "counter_card"
+            },
+            {
                 "url": "assets/dino.png",
                 "key": "dino",
                 "type": "image"
@@ -45,6 +55,11 @@
                 "url": "assets/heart.png",
                 "type": "image",
                 "key": "heart"
+            },
+            {
+                "url": "assets/shield_card.png",
+                "type": "image",
+                "key": "shield_card"
             },
             {
                 "url": "assets/slide_vertical_color.png",

@@ -88,7 +88,7 @@ class Level extends Phaser.Scene {
     }
     
     createCardSelection() {
-        const art = { Attack: "card_attack", Counter: "card_counter", Shield: "card_shield" };
+        const art = { Attack: "attack_card", Counter: "counter_card", Shield: "shield_card" };
   		const cards = Object.keys(art);
         
         this.cardButtons = [];
