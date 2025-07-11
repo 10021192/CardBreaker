@@ -404,20 +404,19 @@ class Lobby extends Phaser.Scene {
 		games.forEach((game, index) => {
 			const x = (index - (games.length - 1) / 2) * 200;
 
-			 let opponentName = 'unknown';
-			if (game.opponent_name) {
-				opponentName = game.opponent_name;
-			} else if (game.player1_name && game.player2_name) {
-				opponentName = (game.player1_name === this.currentUser.username)
-					? game.player2_name
-					: game.player1_name;
+			// Determine opponent name based on your role
+			let opponentName;
+			if (game.your_role === 'player1') {
+				opponentName = game.player2_name;
+			} else {
+				opponentName = game.player1_name;
 			}
 
 			// Game button
 			const gameBtn = this.add.rectangle(x, 0, 180, 40, 0x555555)
 				.setInteractive({ useHandCursor: true });
 
-			const gameText = this.add.text(x, 0, `Game vs ${game.opponent_name}`, {
+			const gameText = this.add.text(x, 0, `Game vs ${opponentName}`, {
 				fontSize: '16px',
 				color: '#ffffff'
 			}).setOrigin(0.5);
