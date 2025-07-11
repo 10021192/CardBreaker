@@ -120,9 +120,6 @@ class Level extends Phaser.Scene {
         this.switchToken = this.add.image(70, 350, "token_switch")
                              .setDisplaySize(60, 60)
                              .setInteractive({ useHandCursor: true });
-		this.lifeToken = this.add.image(130, 350, "token_life")
-								.setDisplaySize(60, 60)
-								.setInteractive({ useHandCursor: true });
         this.switchCooldownText = this.add.text(70, 390, '', {
             fontSize: '14px',
             color: '#ff4444'
