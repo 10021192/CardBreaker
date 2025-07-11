@@ -27,6 +27,9 @@ class Level extends Phaser.Scene {
         // Get game ID from registry
         this.gameId = this.game.registry.get('currentGameId');
         this.currentUser = this.game.registry.get('currentUser');
+
+        // Debug: Check what properties currentUser has
+        console.log('Current user object:', this.currentUser);
         
         // Background
         this.add.rectangle(640, 360, 1280, 720, 0x1a1a1a);
@@ -708,18 +711,13 @@ class Level extends Phaser.Scene {
         const oppOriginal = isPlayer1 ? round.player2_original_card : round.player1_original_card;
         const myToken = isPlayer1 ? round.player1_token_effect : round.player2_token_effect;
         const oppToken = isPlayer1 ? round.player2_token_effect : round.player1_token_effect;
-        // IMPORTANT: Get the actual player ID from the round data
-        const myPlayerId = isPlayer1 ? round.player1_id : round.player2_id;
-
-        console.log('processHistoryRound:', {
-            roundNumber: round.round_number,
-            yourRole: this.yourRole,
-            isPlayer1: isPlayer1,
-            player1_id: round.player1_id,
-            player2_id: round.player2_id,
-            winner_id: round.round_winner_id,
-            currentUserId: this.currentUser.user_id
-        });
+        
+        // Determine if player won
+        let iWon = false;
+        if (round.round_winner_id && round.player1_id && round.player2_id) {
+            const myId = isPlayer1 ? round.player1_id : round.player2_id;
+            iWon = (round.round_winner_id == myId);
+        }
         
         // Add to round history only
         this.addRoundToHistory(round.round_number, {
@@ -730,7 +728,7 @@ class Level extends Phaser.Scene {
             myToken,
             oppToken,
             winner: round.round_winner_id,
-            myPlayerId: myPlayerId,
+            iWon: iWon,
             roundNumber: round.round_number // Store this to prevent duplicates
         });
     }
@@ -769,18 +767,6 @@ class Level extends Phaser.Scene {
         const oppOriginal = isPlayer1 ? roundData.player2_original_card : roundData.player1_original_card;
         const myToken = isPlayer1 ? roundData.player1_token_effect : roundData.player2_token_effect;
         const oppToken = isPlayer1 ? roundData.player2_token_effect : roundData.player1_token_effect;
-        
-        //const myPlayerId = isPlayer1 ? roundData.player1_id : roundData.player2_id;
-
-        console.log('handleRoundResult:', {
-            roundNumber: roundData.round_number || this.currentRound,
-            yourRole: this.yourRole,
-            isPlayer1: isPlayer1,
-            player1_id: roundData.player1_id,
-            player2_id: roundData.player2_id,
-            winner_id: roundData.round_winner_id,
-            currentUserId: this.currentUser.user_id
-        });
 
         // Safety check
         if (!myCard || !oppCard) {
@@ -790,6 +776,22 @@ class Level extends Phaser.Scene {
         
         // Show opponent's card
         this.opponentCardText.setText(oppCard.toUpperCase());
+
+        // IMPORTANT: Determine if player won based on the winner_id and role
+        let iWon = false;
+        if (roundData.round_winner_id) {
+            // If player IDs are available in the round data, use them
+            if (roundData.player1_id && roundData.player2_id) {
+                const myId = isPlayer1 ? roundData.player1_id : roundData.player2_id;
+                iWon = (roundData.round_winner_id == myId);
+            } else {
+                // Fallback: assume winner_id matches the role
+                // This is less reliable but might work if the server is consistent
+                // We'll need to verify this with the actual data
+                console.warn('No player IDs in round data, using role-based assumption');
+                iWon = false; // Can't determine without IDs
+            }
+        }
         
         this.addRoundToHistory(roundData.round_number || this.currentRound, {
             myCard,
@@ -821,17 +823,13 @@ class Level extends Phaser.Scene {
         }
         message += '\n';
         
+        // Result message
         if (!roundData.round_winner_id) {
             message += "TIE!";
+        } else if (iWon) {
+            message += 'You WON!';
         } else {
-            // Check if player won based on role and winner
-            const playerWon = (isPlayer1 && roundData.round_winner_id == roundData.player1_id) ||
-                            (!isPlayer1 && roundData.round_winner_id == roundData.player2_id);
-            if (playerWon) {
-                message += 'You WON!';
-            } else {
-                message += myToken === 'life' ? 'You lost (saved by Life token)' : 'You LOST!';
-            }
+            message += myToken === 'life' ? 'You lost (saved by Life token)' : 'You LOST!';
         }
         
         this.statusText.setText(message);
@@ -888,37 +886,19 @@ class Level extends Phaser.Scene {
         
         if (!data.winner) {
             resultText = 'TIE';
-        } else {
-            // Determine if current player won based on their role
-            let playerWon = false;
-            
-            if (data.isPlayer1 !== undefined) {
-                // We know the player's role
-                playerWon = (data.isPlayer1 && data.winner == this.currentUser.user_id) ||
-                        (!data.isPlayer1 && data.winner == this.currentUser.user_id);
-                
-                // If the winner matches my user ID, I won
-                playerWon = (data.winner == this.currentUser.user_id);
-                
-                console.log('Round history winner check:', {
-                    round: roundNumber,
-                    winnerId: data.winner,
-                    myUserId: this.currentUser.user_id,
-                    isPlayer1: data.isPlayer1,
-                    playerWon: playerWon
-                });
-            } else {
-                // Fallback: just check if winner matches current user
-                playerWon = (data.winner == this.currentUser.user_id);
-            }
-
-            if (playerWon) {
+        } else if (data.iWon !== undefined) {
+            // Use the pre-determined result
+            if (data.iWon) {
                 resultText = 'WIN';
                 resultColor = '#00ff00';
             } else {
                 resultText = 'LOSS';
                 resultColor = '#ff4444';
             }
+        } else {
+            // No way to determine
+            resultText = '?';
+            resultColor = '#888888';
         }
         
         const resultLabel = this.add.text(80, 0, resultText, {
