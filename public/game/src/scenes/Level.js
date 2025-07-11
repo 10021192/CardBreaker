@@ -459,21 +459,41 @@ class Level extends Phaser.Scene {
         this.gameState = 'revealing';
         this.roundResultShown = true;
         
+        // Handle both data structures from playCard response and fetchRoundResult
+        // If this is from playCard response, it has a different structure
+        let roundData;
+        if (round.player1Card !== undefined) {
+            // This is from playCard response with camelCase fields
+            roundData = {
+                round_number: this.currentRound,
+                player1_card: round.player1Card,
+                player2_card: round.player2Card,
+                player1_original_card: round.player1OriginalCard,
+                player2_original_card: round.player2OriginalCard,
+                player1_token_effect: round.player1TokenUsed,
+                player2_token_effect: round.player2TokenUsed,
+                round_winner_id: round.roundWinner
+            };
+        } else {
+            // This is from fetchRoundResult with snake_case fields
+            roundData = round;
+        }
+        
         // Determine cards based on role
-        const isPlayer1 = round.player1_id ? 
-            this.currentUser.user_id === round.player1_id :
+        const isPlayer1 = roundData.player1_id ? 
+            this.currentUser.user_id === roundData.player1_id :
             this.yourRole === 'player1';
             
-        const myCard = isPlayer1 ? round.player1_card : round.player2_card;
-        const oppCard = isPlayer1 ? round.player2_card : round.player1_card;
-        const myOriginal = isPlayer1 ? round.player1_original_card : round.player2_original_card;
-        const oppOriginal = isPlayer1 ? round.player2_original_card : round.player1_original_card;
-        const myToken = isPlayer1 ? round.player1_token_effect : round.player2_token_effect;
-        const oppToken = isPlayer1 ? round.player2_token_effect : round.player1_token_effect;
+        const myCard = isPlayer1 ? roundData.player1_card : roundData.player2_card;
+        const oppCard = isPlayer1 ? roundData.player2_card : roundData.player1_card;
+        const myOriginal = isPlayer1 ? roundData.player1_original_card : roundData.player2_original_card;
+        const oppOriginal = isPlayer1 ? roundData.player2_original_card : roundData.player1_original_card;
+        const myToken = isPlayer1 ? roundData.player1_token_effect : roundData.player2_token_effect;
+        const oppToken = isPlayer1 ? roundData.player2_token_effect : roundData.player1_token_effect;
         
         // Safety check
         if (!myCard || !oppCard) {
-            console.error('Round result missing card data:', round);
+            console.error('Round result missing card data:', roundData);
             return;
         }
         
@@ -481,18 +501,18 @@ class Level extends Phaser.Scene {
         this.opponentCardText.setText(oppCard.toUpperCase());
         
         // Add to round history
-        this.addRoundToHistory(round.round_number || this.currentRound, {
+        this.addRoundToHistory(roundData.round_number || this.currentRound, {
             myCard,
             oppCard,
             myOriginal,
             oppOriginal,
             myToken,
             oppToken,
-            winner: round.round_winner_id
+            winner: roundData.round_winner_id
         });
         
         // Build status message
-        let message = `Round ${round.round_number || this.currentRound} Complete!\n`;
+        let message = `Round ${roundData.round_number || this.currentRound} Complete!\n`;
         message += `You: ${myCard.toUpperCase()}`;
         if (myToken === 'switch' && myOriginal) {
             message += ` (was ${myOriginal.toUpperCase()})`;
@@ -510,10 +530,10 @@ class Level extends Phaser.Scene {
         message += '\n';
         
         // Result
-        if (!round.round_winner_id) {
+        if (!roundData.round_winner_id) {
             message += "TIE!";
         } else {
-            const playerWon = round.round_winner_id === this.currentUser.user_id;
+            const playerWon = roundData.round_winner_id === this.currentUser.user_id;
             if (playerWon) {
                 message += 'You WON!';
             } else {
@@ -530,7 +550,6 @@ class Level extends Phaser.Scene {
         });
     }
 
-    // Add this new method to handle round history:
     addRoundToHistory(roundNumber, data) {
         // Create entry container
         const entryY = this.roundHistoryEntries.length * 60;
@@ -544,15 +563,19 @@ class Level extends Phaser.Scene {
         }).setOrigin(0, 0.5);
         entry.add(roundLabel);
         
-        // Cards played
+        // Cards played - use first letter of card
         let cardsText = `${data.myCard.charAt(0).toUpperCase()}`;
-        if (data.myToken === 'switch') cardsText += '→' + data.myOriginal.charAt(0).toUpperCase();
+        if (data.myToken === 'switch' && data.myOriginal) {
+            cardsText += '→' + data.myOriginal.charAt(0).toUpperCase();
+        }
         if (data.myToken === 'life') cardsText += '♥';
         
         cardsText += ' vs ';
         
         cardsText += `${data.oppCard.charAt(0).toUpperCase()}`;
-        if (data.oppToken === 'switch') cardsText += '→' + data.oppOriginal.charAt(0).toUpperCase();
+        if (data.oppToken === 'switch' && data.oppOriginal) {
+            cardsText += '→' + data.oppOriginal.charAt(0).toUpperCase();
+        }
         if (data.oppToken === 'life') cardsText += '♥';
         
         const cardsLabel = this.add.text(-80, 0, cardsText, {
