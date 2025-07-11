@@ -27,9 +27,6 @@ class Level extends Phaser.Scene {
         // Get game ID from registry
         this.gameId = this.game.registry.get('currentGameId');
         this.currentUser = this.game.registry.get('currentUser');
-
-        // Debug: Check what properties currentUser has
-        console.log('Current user object:', this.currentUser);
         
         // Background
         this.add.rectangle(640, 360, 1280, 720, 0x1a1a1a);
@@ -787,7 +784,7 @@ class Level extends Phaser.Scene {
             } else {
                 // Fallback: assume winner_id matches the role
                 // This is less reliable but might work if the server is consistent
-                // We'll need to verify this with the actual data
+                // Need to verify this with the actual data
                 console.warn('No player IDs in round data, using role-based assumption');
                 iWon = false; // Can't determine without IDs
             }
