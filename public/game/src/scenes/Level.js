@@ -92,20 +92,81 @@ class Level extends Phaser.Scene {
   		const cards = Object.keys(art);
         
         this.cardButtons = [];
+        this.selectedCardHighlight = null;
         
         cards.forEach((card, index) => {
             const x = 490 + (index * 150);
             const y = 580;
             
+            // Create highlight border (hidden by default)
+            const highlight = this.add.rectangle(x, y, 110, 150, 0xffff00, 0)
+            .setStrokeStyle(3, 0xffff00, 1)
+            .setVisible(false);
+
             const img = this.add.image(x, y, art[card])
                        .setDisplaySize(100, 140)
-                       .setInteractive({ useHandCursor: true });
+                       .setInteractive({ useHandCursor: true })
+                       .setAlpha(0.8);
+
+            // Hover effects
+            img.on('pointerover', () => {
+                if (this.gameState === 'selecting') {
+                    img.setAlpha(1); // Full brightness on hover
+                    this.tweens.add({
+                        targets: img,
+                        scaleX: 1.05,
+                        scaleY: 1.05,
+                        duration: 100,
+                        ease: 'Power1'
+                    });
+                }
+            });
+            
+            img.on('pointerout', () => {
+                if (this.gameState === 'selecting') {
+                    img.setAlpha(this.selectedCard === card ? 1 : 0.8);
+                    this.tweens.add({
+                        targets: img,
+                        scaleX: 1,
+                        scaleY: 1,
+                        duration: 100,
+                        ease: 'Power1'
+                    });
+                }
+            });
             
 			img.on('pointerdown', () => {
 				if (this.gameState !== 'selecting') return;
-				if (this.selectedToken === 'switch' && this.selectedCard)
-					this.selectSwitchCard(card); else this.selectCard(card);
-			});
+
+                // Click animation
+                this.tweens.add({
+                    targets: img,
+                    scaleX: 0.95,
+                    scaleY: 0.95,
+                    duration: 50,
+                    yoyo: true,
+                    ease: 'Power1'
+                });
+
+				if (this.selectedToken === 'switch' && this.selectedCard) {
+                    this.selectSwitchCard(card);
+                } else {
+                    this.selectCard(card);
+                    
+                    // Update selection highlight
+                    if (this.selectedCardHighlight) {
+                        this.selectedCardHighlight.setVisible(false);
+                    }
+                    highlight.setVisible(true);
+                    this.selectedCardHighlight = highlight;
+                    
+                    // Update card alphas
+                    this.cardButtons.forEach(btn => {
+                        btn.img.setAlpha(btn.type === card ? 1 : 0.8);
+                    });
+                }
+            });
+
 			this.cardButtons.push({ img, type:card });
         });
     }
@@ -117,31 +178,97 @@ class Level extends Phaser.Scene {
             color: '#ffffff'
         }).setOrigin(0.5);
         
+        // Token highlights (hidden by default)
+        this.switchTokenHighlight = this.add.circle(70, 350, 35, 0xffff00, 0)
+            .setStrokeStyle(2, 0xffff00, 1)
+            .setVisible(false);
+        
+        this.lifeTokenHighlight = this.add.circle(130, 350, 35, 0xffff00, 0)
+            .setStrokeStyle(2, 0xffff00, 1)
+            .setVisible(false);
+        
         // Switch token
         this.switchToken = this.add.image(70, 350, "token_switch")
-                             .setDisplaySize(60, 60)
-                             .setInteractive({ useHandCursor: true });
+                            .setDisplaySize(60, 60)
+                            .setInteractive({ useHandCursor: true })
+                            .setAlpha(0.8);
+                            
+        // Life token
+        this.lifeToken = this.add.image(130, 350, "token_life")
+                        .setDisplaySize(60, 60)
+                        .setInteractive({ useHandCursor: true })
+                        .setAlpha(0.8);
+        
+        // Cooldown texts
         this.switchCooldownText = this.add.text(70, 390, '', {
             fontSize: '14px',
             color: '#ff4444'
         }).setOrigin(0.5);
         
-        // Life token
-          this.lifeToken = this.add.image(130, 350, "token_life")
-                           .setDisplaySize(60, 60)
-                           .setInteractive({ useHandCursor: true });
         this.lifeCooldownText = this.add.text(130, 390, '', {
             fontSize: '14px',
             color: '#ff4444'
         }).setOrigin(0.5);
         
-        // Token selection
-        this.switchToken.on('pointerdown', () => this.selectToken('switch'));
-        this.lifeToken.on('pointerdown', () => this.selectToken('life'));
+        // Token hover effects
+        [this.switchToken, this.lifeToken].forEach((token, index) => {
+            const tokenType = index === 0 ? 'switch' : 'life';
+            
+            token.on('pointerover', () => {
+                if (this.gameState === 'selecting' && this.tokenAvailable) {
+                    token.setAlpha(1);
+                    this.tweens.add({
+                        targets: token,
+                        scaleX: 1.1,
+                        scaleY: 1.1,
+                        duration: 100,
+                        ease: 'Power1'
+                    });
+                }
+            });
+            
+            token.on('pointerout', () => {
+                if (this.gameState === 'selecting') {
+                    const isSelected = this.selectedToken === tokenType;
+                    token.setAlpha(isSelected ? 1 : (this.tokenAvailable ? 0.8 : 0.5));
+                    this.tweens.add({
+                        targets: token,
+                        scaleX: 1,
+                        scaleY: 1,
+                        duration: 100,
+                        ease: 'Power1'
+                    });
+                }
+            });
+            
+            token.on('pointerdown', () => {
+                if (this.gameState === 'selecting' && this.tokenAvailable) {
+                    // Click animation
+                    this.tweens.add({
+                        targets: token,
+                        scaleX: 0.9,
+                        scaleY: 0.9,
+                        duration: 50,
+                        yoyo: true,
+                        ease: 'Power1'
+                    });
+                    
+                    this.selectToken(tokenType);
+                    
+                    // Update highlights
+                    this.switchTokenHighlight.setVisible(this.selectedToken === 'switch');
+                    this.lifeTokenHighlight.setVisible(this.selectedToken === 'life');
+                    
+                    // Update token alphas
+                    this.switchToken.setAlpha(this.selectedToken === 'switch' ? 1 : 0.8);
+                    this.lifeToken.setAlpha(this.selectedToken === 'life' ? 1 : 0.8);
+                }
+            });
+        });
         
         this.tokenButtons = { switch: this.switchToken, life: this.lifeToken };
         
-        // Switch card selection hint
+        // Switch hint text
         this.switchHintText = this.add.text(100, 420, '', {
             fontSize: '16px',
             color: '#9944ff',
@@ -174,21 +301,81 @@ class Level extends Phaser.Scene {
             color: '#ffffff'
         }).setOrigin(0.5);
         
-        playButton.on('pointerover', () => playButton.setFillStyle(0x66ff66));
-        playButton.on('pointerout', () => playButton.setFillStyle(0x44ff44));
-        playButton.on('pointerdown', () => this.playCard());
+        playButton.on('pointerover', () => {
+            playButton.setFillStyle(0x66ff66);
+            this.tweens.add({
+                targets: playButton,
+                scaleX: 1.05,
+                scaleY: 1.05,
+                duration: 100,
+                ease: 'Power1'
+            });
+        });
+        
+        playButton.on('pointerout', () => {
+            playButton.setFillStyle(0x44ff44);
+            this.tweens.add({
+                targets: playButton,
+                scaleX: 1,
+                scaleY: 1,
+                duration: 100,
+                ease: 'Power1'
+            });
+        });
+        
+        playButton.on('pointerdown', () => {
+            this.tweens.add({
+                targets: [playButton, playText],
+                scaleX: 0.95,
+                scaleY: 0.95,
+                duration: 50,
+                yoyo: true,
+                ease: 'Power1',
+                onComplete: () => this.playCard()
+            });
+        });
         
         // Quit game button
         const quitButton = this.add.rectangle(1100, 600, 150, 40, 0xff4444)
             .setInteractive({ useHandCursor: true });
-        this.add.text(1100, 600, 'Quit Game', {
+        const quitText = this.add.text(1100, 600, 'Quit Game', {
             fontSize: '18px',
             color: '#ffffff'
         }).setOrigin(0.5);
         
-        quitButton.on('pointerover', () => quitButton.setFillStyle(0xff6666));
-        quitButton.on('pointerout', () => quitButton.setFillStyle(0xff4444));
-        quitButton.on('pointerdown', () => this.quitGame());
+        quitButton.on('pointerover', () => {
+            quitButton.setFillStyle(0xff6666);
+            this.tweens.add({
+                targets: quitButton,
+                scaleX: 1.05,
+                scaleY: 1.05,
+                duration: 100,
+                ease: 'Power1'
+            });
+        });
+        
+        quitButton.on('pointerout', () => {
+            quitButton.setFillStyle(0xff4444);
+            this.tweens.add({
+                targets: quitButton,
+                scaleX: 1,
+                scaleY: 1,
+                duration: 100,
+                ease: 'Power1'
+            });
+        });
+        
+        quitButton.on('pointerdown', () => {
+            this.tweens.add({
+                targets: [quitButton, quitText],
+                scaleX: 0.95,
+                scaleY: 0.95,
+                duration: 50,
+                yoyo: true,
+                ease: 'Power1',
+                onComplete: () => this.quitGame()
+            });
+        });
     }
 
     createRoundHistoryPanel() {
@@ -328,6 +515,20 @@ class Level extends Phaser.Scene {
         this.selectedToken = null;
         this.switchToCard = null;
         this.switchHintText.setVisible(false);
+        
+        // Clear visual selections
+        if (this.selectedCardHighlight) {
+            this.selectedCardHighlight.setVisible(false);
+        }
+        this.switchTokenHighlight.setVisible(false);
+        this.lifeTokenHighlight.setVisible(false);
+        
+        // Reset alphas
+        this.cardButtons.forEach(btn => btn.img.setAlpha(0.8));
+        if (this.tokenAvailable) {
+            this.switchToken.setAlpha(0.8);
+            this.lifeToken.setAlpha(0.8);
+        }
     }
     
     startPolling() {
@@ -431,15 +632,26 @@ class Level extends Phaser.Scene {
         this.lifeCooldownText.setText(cooldownText);
         
         // Update token interactivity and appearance
-        const alpha = this.tokenAvailable ? 1 : 0.5;
+        const alpha = this.tokenAvailable ? 0.8 : 0.5;
         this.switchToken.setAlpha(alpha);
         this.lifeToken.setAlpha(alpha);
+        
+        // Disable interaction when on cooldown
+        if (this.tokenAvailable) {
+            this.switchToken.setInteractive();
+            this.lifeToken.setInteractive();
+        } else {
+            this.switchToken.disableInteractive();
+            this.lifeToken.disableInteractive();
+        }
         
         // Clear token selection if on cooldown
         if (!this.tokenAvailable && this.selectedToken) {
             this.selectedToken = null;
             this.switchToCard = null;
             this.switchHintText.setVisible(false);
+            this.switchTokenHighlight.setVisible(false);
+            this.lifeTokenHighlight.setVisible(false);
         }
     }
     
