@@ -10,9 +10,11 @@ Rock-paper-scissors style card combat. Each player has 3 lives and picks a card 
 
 - **WEGO Turn System** — Both players choose simultaneously
 - **Multiplayer** — Account registration, player challenges, 1v1 matches
-- **Server-Authoritative** — Game logic runs on the server, validated via MySQL
+- **Server-Authoritative** — Game logic runs on the server
+- **Database-Backed** — MySQL stores user accounts, match state, round history
 - **Round History** — Tracks previous rounds on-screen
 - **Token Mechanic** — Strategic resource with cooldown management
+- **Cloud Deployed** — Hosted via Render
 
 ## Tech Stack
 
