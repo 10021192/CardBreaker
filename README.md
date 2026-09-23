@@ -20,6 +20,35 @@ Rock-paper-scissors style card combat. Each player has 3 lives and picks a card 
 - **Server:** Node.js, Express.js
 - **Database:** MySQL (user accounts, challenge state, match state, round history)
 
+## Setup
+
+### Prerequisites
+- Node.js
+- MySQL
+
+### Installation
+
+1. **Install dependencies:**
+
+npm install
+
+
+2. **Create database:**
+   - Run `sqlscripts.sql` to create database, tables, and seed data
+
+3. **Configure environment:**
+   - Copy `.env.example` to `.env`
+   - Edit `DB_HOST`, `DB_USER`, `DB_PASS` with your MySQL credentials
+
+4. **Run:**
+
+npm start
+
+   Server runs at `http://localhost:3000`
+
+### Deployment
+Deployed via Render web service with hosted MySQL database.
+
 ## Known Limitations
 
 - Life-token side stopped working before delivery (bug not resolved)
